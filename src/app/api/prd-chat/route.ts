@@ -21,13 +21,13 @@ export async function POST(req: NextRequest) {
     const messages: { role: string; content: string }[] = []
 
     if (engine === 'sonar') {
-      // Perplexity Sonar via OpenRouter
-      model  = 'perplexity/sonar-pro'
+      // Perplexity via OpenRouter (free tier)
+      model  = 'perplexity/sonar'
       apiKey = OPENROUTER_SONAR_KEY || OPENROUTER_GPT_KEY
       messages.push({ role: 'user', content: message })
     } else {
-      // GPT-4o via OpenRouter
-      model  = 'openai/gpt-4o'
+      // GPT-4o-mini via OpenRouter (free tier available)
+      model  = 'openai/gpt-4o-mini'
       apiKey = OPENROUTER_GPT_KEY
       if (system) messages.push({ role: 'system', content: system })
       messages.push({ role: 'user', content: message })
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ content })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Unknown error'
+    console.error('[prd-chat] Error:', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
