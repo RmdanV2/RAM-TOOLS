@@ -5,6 +5,7 @@ import {
   Loader2, Download, Package, Users, TrendingUp, Code2,
   Layers, Zap, Shield, AlertTriangle, CheckSquare, BookOpen,
   Terminal, FolderTree, Star, Sparkles, MessageSquare, ChevronDown,
+  type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Lang } from '@/lib/i18n'
@@ -309,7 +310,7 @@ type PromptTarget = 'web' | 'mobile' | 'api' | 'fullstack' | 'claude-code'
 interface GeneratedPrompt {
   target: PromptTarget
   label: string
-  icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>
+  icon: LucideIcon
   color: string
   description: string
   prompt: string
