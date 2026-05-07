@@ -4,7 +4,7 @@ import {
   FileText, ArrowRight, RotateCcw, Copy, Check, ChevronRight,
   Loader2, Download, Package, Users, TrendingUp, Code2,
   Layers, Zap, Shield, AlertTriangle, CheckSquare, BookOpen,
-  Terminal, FolderTree, Star,
+  Terminal, FolderTree, Star, Sparkles, MessageSquare, ChevronDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Lang } from '@/lib/i18n'
@@ -303,6 +303,196 @@ const LOADING_MESSAGES: Record<PRDMode, string[]> = {
   ],
 }
 
+// ─── AI Prompt Generator ──────────────────────────────────────────────────────
+type PromptTarget = 'web' | 'mobile' | 'api' | 'fullstack' | 'claude-code'
+
+interface GeneratedPrompt {
+  target: PromptTarget
+  label: string
+  icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>
+  color: string
+  description: string
+  prompt: string
+}
+
+function buildAIPrompts(prd: string, stack: string, projectName: string): GeneratedPrompt[] {
+  const shortPRD = prd.slice(0, 3000)
+  const name = projectName || 'proyek ini'
+
+  // Extract key sections from PRD for context
+  const featuresMatch = prd.match(/## (?:4\.|Fitur|Core Features|Fitur Utama)([\s\S]{0,1500})(?=\n##)/i)
+  const techMatch = prd.match(/## (?:7\.|Arsitektur|Architecture|Tech Stack)([\s\S]{0,800})(?=\n##)/i)
+  const apiMatch = prd.match(/## (?:9\.|API|Endpoint)([\s\S]{0,800})(?=\n##)/i)
+
+  const featuresContext = featuresMatch?.[1]?.trim() || ''
+  const techContext = techMatch?.[1]?.trim() || stack || ''
+  const apiContext = apiMatch?.[1]?.trim() || ''
+
+  return [
+    {
+      target: 'claude-code',
+      label: 'Claude Code',
+      icon: Terminal,
+      color: 'var(--m-red)',
+      description: 'Prompt lengkap untuk Claude Code — langsung build dari terminal',
+      prompt: `Kamu adalah senior full-stack engineer. Saya ingin kamu membangun ${name} dari awal berdasarkan PRD berikut.
+
+## TECH STACK
+${techContext || stack}
+
+## RINGKASAN PRD
+${shortPRD}
+
+## INSTRUKSI
+1. Mulai dengan setup project structure yang clean sesuai best practices
+2. Implementasikan setiap fitur satu per satu, mulai dari yang paling core
+3. Gunakan TypeScript strict mode
+4. Setiap file harus ada komentar singkat di atas menjelaskan fungsinya
+5. Ikuti coding rules: single responsibility, max 3 level nesting, no magic number, semua API harus ada validation, semua async harus handle error
+6. Buat .env.example untuk semua environment variables yang dibutuhkan
+7. Setelah selesai, tunjukkan cara menjalankan project secara lokal
+
+Mulai dari setup folder structure dan file utama terlebih dahulu, lalu tanya konfirmasi sebelum melanjutkan ke implementasi fitur.`,
+    },
+    {
+      target: 'fullstack',
+      label: 'Full Stack App',
+      icon: Layers,
+      color: 'var(--m-blue-dark)',
+      description: 'Prompt untuk build web app lengkap (frontend + backend + database)',
+      prompt: `Bantu saya membangun aplikasi web full-stack untuk ${name}.
+
+## KONTEKS PRODUK
+${shortPRD}
+
+## TECH STACK YANG DIGUNAKAN
+${techContext || stack}
+
+## YANG PERLU DIBANGUN
+${featuresContext ? `Fitur-fitur utama:\n${featuresContext}` : 'Semua fitur sesuai PRD di atas'}
+
+## CODING STANDARDS WAJIB
+- Clean Code: kode mudah dibaca, nama variabel deskriptif
+- Single Responsibility: setiap function hanya 1 tugas
+- Tidak ada magic number — gunakan konstanta bernama
+- Semua endpoint API wajib validasi input (gunakan Zod atau library serupa)
+- Semua operasi async wajib try/catch
+- Environment variables di .env, tidak boleh hardcode
+
+## OUTPUT YANG DIHARAPKAN
+1. Struktur folder project yang clean
+2. Setup konfigurasi awal (package.json, tsconfig, env)
+3. Implementasi fitur core satu per satu
+4. Penjelasan singkat setiap keputusan teknis yang diambil
+
+Mulai dari mana yang paling masuk akal untuk dikerjakan pertama.`,
+    },
+    {
+      target: 'web',
+      label: 'Frontend / UI',
+      icon: Zap,
+      color: 'var(--m-blue-light)',
+      description: 'Fokus pada UI/UX, komponen, dan halaman frontend',
+      prompt: `Bantu saya membuat frontend untuk ${name}.
+
+## RINGKASAN PRODUK
+${shortPRD.slice(0, 1500)}
+
+## TECH STACK FRONTEND
+${techContext || 'Next.js 14, TypeScript, Tailwind CSS'}
+
+## FITUR UI YANG DIBUTUHKAN
+${featuresContext || 'Semua fitur sesuai PRD'}
+
+## STANDAR KODE
+- Komponen kecil dan reusable (Single Responsibility)
+- Tidak ada inline style berlebihan — gunakan class atau CSS variables
+- Semua form harus ada validasi client-side
+- Loading state dan error state harus di-handle untuk setiap fetch
+- Responsive mobile-first
+- Aksesibilitas dasar (aria-label, semantic HTML)
+
+## OUTPUT YANG DIHARAPKAN
+1. Struktur folder komponen yang clean
+2. Komponen UI utama (layout, navbar, halaman kritis)
+3. Integrasi dengan API backend (gunakan placeholder jika backend belum ada)
+4. Kode siap production dengan TypeScript strict
+
+Mulai dari layout utama dan halaman yang paling sering dikunjungi user.`,
+    },
+    {
+      target: 'api',
+      label: 'Backend / API',
+      icon: Code2,
+      color: 'var(--m-blue-dark)',
+      description: 'Fokus pada REST API, database, dan business logic',
+      prompt: `Bantu saya membangun backend API untuk ${name}.
+
+## RINGKASAN PRODUK
+${shortPRD.slice(0, 1500)}
+
+## TECH STACK BACKEND
+${techContext || 'Node.js, Express/Fastify/Hono, TypeScript, Prisma'}
+
+## ENDPOINT API YANG DIBUTUHKAN
+${apiContext || 'Semua endpoint sesuai PRD di atas'}
+
+## STANDAR KODE BACKEND
+- Setiap endpoint WAJIB validasi input (Zod schema)
+- Semua operasi database wajib try/catch dengan error yang informatif
+- Gunakan HTTP status code yang tepat (200, 201, 400, 401, 403, 404, 500)
+- Semua secret di environment variable — tidak boleh hardcode
+- Autentikasi menggunakan JWT atau OAuth sesuai kebutuhan
+- Rate limiting untuk endpoint publik
+- Logging untuk setiap request dan error
+
+## OUTPUT YANG DIHARAPKAN
+1. Setup project backend dengan struktur folder clean (routes, controllers, services, models)
+2. Implementasi endpoint per fitur
+3. Database schema dan migration
+4. Middleware autentikasi dan validasi
+5. .env.example dengan semua variabel yang dibutuhkan
+
+Mulai dari setup project dan endpoint autentikasi terlebih dahulu.`,
+    },
+    {
+      target: 'mobile',
+      label: 'Mobile App',
+      icon: MessageSquare,
+      color: 'var(--success)',
+      description: 'Prompt untuk React Native atau Flutter',
+      prompt: `Bantu saya membangun aplikasi mobile untuk ${name}.
+
+## RINGKASAN PRODUK
+${shortPRD.slice(0, 1500)}
+
+## TECH STACK MOBILE
+React Native (Expo) dengan TypeScript — atau sesuaikan dengan preferensi
+
+## FITUR MOBILE YANG DIBUTUHKAN
+${featuresContext || 'Semua fitur sesuai PRD'}
+
+## STANDAR KODE
+- Komponen kecil dan reusable
+- Navigation menggunakan React Navigation
+- State management: Zustand atau Redux Toolkit
+- Semua API call harus handle loading, success, dan error state
+- Offline-first: data penting di-cache dengan AsyncStorage
+- Push notification untuk fitur yang relevan
+- Responsive untuk berbagai ukuran layar (iPhone SE hingga iPad)
+
+## OUTPUT YANG DIHARAPKAN
+1. Struktur project Expo yang clean
+2. Navigation setup (Tab + Stack navigator)
+3. Screen utama sesuai fitur core
+4. Integrasi API dengan error handling
+5. Komponen reusable (Button, Input, Card, dll)
+
+Mulai dari setup project dan navigation structure terlebih dahulu.`,
+    },
+  ]
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function PRDTool({ lang }: { lang: Lang }) {
   const [S, setS] = useState<State>({
@@ -320,6 +510,8 @@ export default function PRDTool({ lang }: { lang: Lang }) {
   const [claudeGuide, setClaudeGuide] = useState('')
   const [generatingZip, setGeneratingZip] = useState(false)
   const [projectName, setProjectName] = useState('')
+  const [activePromptTarget, setActivePromptTarget] = useState<PromptTarget>('claude-code')
+  const [copiedPrompt, setCopiedPrompt] = useState(false)
 
   const set = useCallback((partial: Partial<State>) => setS(p => ({ ...p, ...partial })), [])
 
@@ -946,6 +1138,157 @@ export default function PRDTool({ lang }: { lang: Lang }) {
                     </div>
                   </div>
                 )}
+
+                {/* ── AI PROMPT PANEL ── */}
+                {!S.isGenerating && (() => {
+                  const stackStr = Object.entries(selStack).map(([k,v]) => `${k}: ${v}`).join(', ')
+                  const pName = projectName || getProjectName()
+                  const prompts = buildAIPrompts(S.prd, stackStr, pName)
+                  const active = prompts.find(p => p.target === activePromptTarget) || prompts[0]
+                  const copyPrompt = () => {
+                    navigator.clipboard.writeText(active.prompt)
+                    setCopiedPrompt(true)
+                    setTimeout(() => setCopiedPrompt(false), 2500)
+                  }
+
+                  return (
+                    <div className="mt-4" style={{ border: '1px solid var(--hairline)' }}>
+                      {/* Panel Header */}
+                      <div className="flex items-center gap-3 px-6 py-4" style={{ background: 'var(--surface-elevated)', borderBottom: '1px solid var(--hairline)' }}>
+                        <Sparkles size={16} style={{ color: 'var(--m-blue-light)', flexShrink: 0 }} />
+                        <div className="flex-1">
+                          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                            PROMPT SIAP PAKAI — BUILD DENGAN AI
+                          </p>
+                          <p style={{ fontSize: 11, fontWeight: 300, color: 'var(--muted)', marginTop: 2 }}>
+                            Salin prompt di bawah dan paste ke Claude, ChatGPT, Cursor, atau Claude Code untuk langsung mulai coding
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Target Selector Tabs */}
+                      <div className="flex overflow-x-auto" style={{ borderBottom: '1px solid var(--hairline)', background: 'var(--surface-card)' }}>
+                        {prompts.map(p => {
+                          const Icon = p.icon
+                          const isActive = activePromptTarget === p.target
+                          return (
+                            <button
+                              key={p.target}
+                              onClick={() => setActivePromptTarget(p.target)}
+                              className="flex items-center gap-2 px-5 py-3 whitespace-nowrap transition-all flex-shrink-0"
+                              style={{
+                                background: isActive ? 'var(--surface-elevated)' : 'transparent',
+                                borderBottom: isActive ? `2px solid ${p.color}` : '2px solid transparent',
+                                borderRight: '1px solid var(--hairline)',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <Icon size={13} style={{ color: isActive ? p.color : 'var(--muted)' }} />
+                              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: isActive ? 'var(--ink)' : 'var(--muted)' }}>
+                                {p.label}
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      {/* Active Prompt Content */}
+                      <div style={{ background: 'var(--surface-card)' }}>
+                        {/* Description bar */}
+                        <div className="flex items-center justify-between px-6 py-3" style={{ borderBottom: '1px solid var(--hairline)', background: 'var(--surface-soft)' }}>
+                          <p style={{ fontSize: 12, fontWeight: 300, color: 'var(--body)' }}>
+                            {active.description}
+                          </p>
+                          <button
+                            onClick={copyPrompt}
+                            className="flex items-center gap-2 flex-shrink-0 ml-4"
+                            style={{
+                              padding: '8px 20px',
+                              background: copiedPrompt ? 'var(--success)' : active.color,
+                              border: 'none',
+                              color: 'var(--ink)',
+                              fontSize: 11,
+                              fontWeight: 700,
+                              letterSpacing: '1.5px',
+                              textTransform: 'uppercase',
+                              cursor: 'pointer',
+                              transition: 'background 0.2s',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8,
+                            }}
+                          >
+                            {copiedPrompt ? <Check size={12} /> : <Copy size={12} />}
+                            {copiedPrompt ? 'TERSALIN!' : 'SALIN PROMPT'}
+                          </button>
+                        </div>
+
+                        {/* Prompt text area */}
+                        <div style={{ position: 'relative' }}>
+                          <pre style={{
+                            padding: '24px 28px',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 12,
+                            lineHeight: 1.7,
+                            color: 'var(--body)',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                            maxHeight: 400,
+                            overflowY: 'auto',
+                            background: 'var(--canvas)',
+                            margin: 0,
+                            borderTop: `3px solid ${active.color}`,
+                          }}>
+                            {active.prompt}
+                          </pre>
+                          {/* Copy overlay button */}
+                          <button
+                            onClick={copyPrompt}
+                            style={{
+                              position: 'absolute',
+                              top: 12,
+                              right: 16,
+                              background: 'var(--surface-elevated)',
+                              border: '1px solid var(--hairline)',
+                              color: copiedPrompt ? 'var(--success)' : 'var(--muted)',
+                              padding: '4px 10px',
+                              fontSize: 10,
+                              fontWeight: 700,
+                              letterSpacing: '1px',
+                              textTransform: 'uppercase',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 6,
+                            }}
+                          >
+                            {copiedPrompt ? <Check size={10} /> : <Copy size={10} />}
+                            {copiedPrompt ? 'COPIED' : 'COPY'}
+                          </button>
+                        </div>
+
+                        {/* Usage hint */}
+                        <div className="flex flex-wrap items-center gap-3 px-6 py-3" style={{ borderTop: '1px solid var(--hairline)', background: 'var(--surface-soft)' }}>
+                          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', color: 'var(--muted)', textTransform: 'uppercase' }}>PASTE KE:</p>
+                          {[
+                            { label: 'Claude.ai', href: 'https://claude.ai' },
+                            { label: 'Claude Code', href: 'https://claude.ai/code' },
+                            { label: 'ChatGPT', href: 'https://chatgpt.com' },
+                            { label: 'Cursor', href: 'https://cursor.sh' },
+                            { label: 'Windsurf', href: 'https://codeium.com/windsurf' },
+                          ].map(tool => (
+                            <a key={tool.label} href={tool.href} target="_blank" rel="noopener noreferrer"
+                              style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', padding: '3px 10px', border: '1px solid var(--hairline)', color: 'var(--body)', background: 'var(--surface-card)', textTransform: 'uppercase', textDecoration: 'none', transition: 'border-color 0.15s' }}
+                              onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--m-blue-dark)')}
+                              onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--hairline)')}>
+                              {tool.label}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
               </>
             )}
 
