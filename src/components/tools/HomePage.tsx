@@ -53,6 +53,17 @@ const TOOLS = [
     badge: { id: 'REFERENSI', en: 'REFERENCE' },
     badgeColor: 'var(--carbon-gray)',
   },
+  {
+    id: 'cv',
+    icon: FileText,
+    label: { id: 'CV GENERATOR', en: 'CV GENERATOR' },
+    desc: {
+      id: '6 template profesional, ATS optimizer, AI enhance, dan download PDF. Tingkatkan peluang diterima kerja hingga 90%.',
+      en: '6 professional templates, ATS optimizer, AI enhance, and PDF download. Increase your hiring chance up to 90%.',
+    },
+    badge: { id: 'BARU', en: 'NEW' },
+    badgeColor: 'var(--success)',
+  },
 ]
 
 const SPECS = [

@@ -7,9 +7,10 @@ import PRDTool from '@/components/tools/PRDTool'
 import DiagramTool from '@/components/tools/DiagramTool'
 import FlowchartTool from '@/components/tools/FlowchartTool'
 import DocsPage from '@/components/tools/DocsPage'
+import CVGenerator from '@/components/tools/CVGenerator'
 import type { Lang } from '@/lib/i18n'
 
-type Tool = 'home' | 'prd' | 'diagram' | 'flowchart' | 'docs'
+type Tool = 'home' | 'prd' | 'diagram' | 'flowchart' | 'docs' | 'cv'
 
 export default function App() {
   const [lang, setLang] = useState<Lang>('id')
@@ -25,21 +26,12 @@ export default function App() {
       <Navbar lang={lang} onLangChange={setLang} activeTool={activeTool} onToolChange={handleToolChange} />
 
       <main className="flex-1">
-        {activeTool === 'home' && (
-          <HomePage lang={lang} onToolChange={handleToolChange} />
-        )}
-        {activeTool === 'prd' && (
-          <PRDTool lang={lang} />
-        )}
-        {activeTool === 'diagram' && (
-          <DiagramTool lang={lang} />
-        )}
-        {activeTool === 'flowchart' && (
-          <FlowchartTool lang={lang} />
-        )}
-        {activeTool === 'docs' && (
-          <DocsPage lang={lang} />
-        )}
+        {activeTool === 'home'      && <HomePage lang={lang} onToolChange={handleToolChange} />}
+        {activeTool === 'prd'       && <PRDTool lang={lang} />}
+        {activeTool === 'diagram'   && <DiagramTool lang={lang} />}
+        {activeTool === 'flowchart' && <FlowchartTool lang={lang} />}
+        {activeTool === 'docs'      && <DocsPage lang={lang} />}
+        {activeTool === 'cv'        && <CVGenerator lang={lang} />}
       </main>
 
       {(activeTool === 'home' || activeTool === 'docs') && <Footer />}

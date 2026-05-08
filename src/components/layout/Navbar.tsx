@@ -15,6 +15,7 @@ const TOOLS = [
   { id: 'prd',       label: { id: 'PRD Generator', en: 'PRD Generator' } },
   { id: 'diagram',   label: { id: 'Diagram Sistem', en: 'System Diagram' } },
   { id: 'flowchart', label: { id: 'Flowchart',     en: 'Flowchart' } },
+  { id: 'cv',        label: { id: 'CV Generator',  en: 'CV Generator' } },
   { id: 'docs',      label: { id: 'Dokumentasi',   en: 'Documentation' } },
 ]
 
