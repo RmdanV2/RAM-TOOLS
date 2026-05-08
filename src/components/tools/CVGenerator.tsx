@@ -1,710 +1,717 @@
 'use client'
-import { useState, useRef, useCallback } from 'react'
+import { useState } from 'react'
 import {
   User, Briefcase, GraduationCap, Award, Code2, Globe, Phone, Mail,
-  MapPin, Plus, Trash2, ChevronDown, ChevronUp, Download, Eye,
-  ArrowLeft, ArrowRight, Check, Sparkles, Star, Loader2,
-  FileText, Palette, MoveUp, MoveDown, type LucideIcon,
+  MapPin, Plus, Trash2, Download, Eye, ArrowLeft, ArrowRight, Check,
+  Sparkles, Star, Loader2, FileText, Palette, MoveUp, MoveDown,
+  Languages, Settings2, Linkedin, Github, ExternalLink, type LucideIcon,
 } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+type CVLang = 'id' | 'en'
+
+const L = {
+  id: {
+    sectionLabels: { template: 'Template', personal: 'Data Diri', experience: 'Pengalaman', education: 'Pendidikan', skills: 'Keahlian', projects: 'Proyek', certifications: 'Sertifikasi', languages: 'Bahasa', preview: 'Preview & Unduh' },
+    headings: { experience: 'PENGALAMAN KERJA', education: 'PENDIDIKAN', skills: 'KEAHLIAN', projects: 'PROYEK', certifications: 'SERTIFIKASI', languages: 'BAHASA', summary: 'RINGKASAN PROFESIONAL', achievements: 'PENCAPAIAN' },
+    present: 'Sekarang', gpa: 'IPK', contact: 'KONTAK',
+    downloadPDF: 'UNDUH PDF', downloadHTML: 'UNDUH HTML', print: 'CETAK',
+    addExp: 'TAMBAH PENGALAMAN', addEdu: 'TAMBAH PENDIDIKAN', addSkill: 'TAMBAH KELOMPOK SKILL',
+    addProject: 'TAMBAH PROYEK', addCert: 'TAMBAH SERTIFIKASI', addLang: 'TAMBAH BAHASA',
+    addBullet: 'TAMBAH PENCAPAIAN', aiEnhance: 'AI ENHANCE', aiSuggest: 'AI SUGGEST SKILLS',
+    stillWorking: 'Masih bekerja di sini', stillStudying: 'Masih kuliah', livePreview: 'LIVE PREVIEW',
+    selected: 'DIPILIH', prev: 'SEBELUMNYA', next: 'SELANJUTNYA',
+    cvOptions: 'OPSI CV', cvLangLabel: 'BAHASA CV', iconsLabel: 'IKON KONTAK', accentLabel: 'WARNA AKSEN', fontSizeLabel: 'UKURAN FONT',
+    withIcons: '✦ DENGAN IKON', noIcons: '— TANPA IKON', small: 'KECIL', normal: 'NORMAL', large: 'BESAR',
+    previewTitle: 'PREVIEW & UNDUH', previewDesc: 'Pastikan semua informasi sudah benar sebelum mengunduh.',
+    atsScore: 'SKOR ATS', atsReady: '✓ Siap dikirim!', atsWarn: '⚠ Perlu perbaikan', atsFail: '✗ Lengkapi CV',
+    checks: ['Nama lengkap diisi','Email diisi','Nomor telepon diisi','Ringkasan ≥ 50 karakter','Minimal 1 pengalaman','Deskripsi pengalaman diisi','Minimal 1 pendidikan','Minimal 3 skill','LinkedIn / Website diisi','Template ATS-friendly'],
+  },
+  en: {
+    sectionLabels: { template: 'Template', personal: 'Personal Info', experience: 'Experience', education: 'Education', skills: 'Skills', projects: 'Projects', certifications: 'Certifications', languages: 'Languages', preview: 'Preview & Download' },
+    headings: { experience: 'WORK EXPERIENCE', education: 'EDUCATION', skills: 'SKILLS', projects: 'PROJECTS', certifications: 'CERTIFICATIONS', languages: 'LANGUAGES', summary: 'PROFESSIONAL SUMMARY', achievements: 'ACHIEVEMENTS' },
+    present: 'Present', gpa: 'GPA', contact: 'CONTACT',
+    downloadPDF: 'DOWNLOAD PDF', downloadHTML: 'DOWNLOAD HTML', print: 'PRINT',
+    addExp: 'ADD EXPERIENCE', addEdu: 'ADD EDUCATION', addSkill: 'ADD SKILL GROUP',
+    addProject: 'ADD PROJECT', addCert: 'ADD CERTIFICATION', addLang: 'ADD LANGUAGE',
+    addBullet: 'ADD ACHIEVEMENT', aiEnhance: 'AI ENHANCE', aiSuggest: 'AI SUGGEST SKILLS',
+    stillWorking: 'Currently working here', stillStudying: 'Currently studying', livePreview: 'LIVE PREVIEW',
+    selected: 'SELECTED', prev: 'PREVIOUS', next: 'NEXT',
+    cvOptions: 'CV OPTIONS', cvLangLabel: 'CV LANGUAGE', iconsLabel: 'CONTACT ICONS', accentLabel: 'ACCENT COLOR', fontSizeLabel: 'FONT SIZE',
+    withIcons: '✦ WITH ICONS', noIcons: '— NO ICONS', small: 'SMALL', normal: 'NORMAL', large: 'LARGE',
+    previewTitle: 'PREVIEW & DOWNLOAD', previewDesc: 'Make sure all information is correct before downloading.',
+    atsScore: 'ATS SCORE', atsReady: '✓ Ready to send!', atsWarn: '⚠ Needs improvement', atsFail: '✗ Complete your CV',
+    checks: ['Full name filled in','Email filled in','Phone number filled in','Summary ≥ 50 chars','At least 1 experience','Experience descriptions filled','At least 1 education','At least 3 skills','LinkedIn / Website filled','ATS-friendly template'],
+  },
+}
+
 interface CVData {
-  personal: {
-    name: string
-    title: string
-    email: string
-    phone: string
-    location: string
-    website: string
-    linkedin: string
-    github: string
-    summary: string
-    photo: string
-  }
+  personal: { name: string; title: string; email: string; phone: string; location: string; website: string; linkedin: string; github: string; summary: string }
   experience: WorkExp[]
   education: Education[]
   skills: SkillGroup[]
   projects: Project[]
   certifications: Certification[]
   languages: LangItem[]
-  achievements: Achievement[]
 }
+interface WorkExp { id: string; company: string; role: string; startDate: string; endDate: string; current: boolean; location: string; description: string; achievements: string[] }
+interface Education { id: string; institution: string; degree: string; field: string; startDate: string; endDate: string; current: boolean; gpa: string; honors: string }
+interface SkillGroup { id: string; category: string; items: string[] }
+interface Project { id: string; name: string; description: string; tech: string; url: string; startDate: string; endDate: string }
+interface Certification { id: string; name: string; issuer: string; date: string; credentialId: string; url: string }
+interface LangItem { id: string; language: string; level: string }
+interface CVOptions { cvLang: CVLang; useIcons: boolean; accentColor: string; fontSize: 'small' | 'normal' | 'large' }
 
-interface WorkExp {
-  id: string
-  company: string
-  role: string
-  startDate: string
-  endDate: string
-  current: boolean
-  location: string
-  description: string
-  achievements: string[]
-}
-
-interface Education {
-  id: string
-  institution: string
-  degree: string
-  field: string
-  startDate: string
-  endDate: string
-  current: boolean
-  gpa: string
-  honors: string
-}
-
-interface SkillGroup {
-  id: string
-  category: string
-  items: string[]
-  level?: 'beginner' | 'intermediate' | 'advanced' | 'expert'
-}
-
-interface Project {
-  id: string
-  name: string
-  description: string
-  tech: string
-  url: string
-  startDate: string
-  endDate: string
-}
-
-interface Certification {
-  id: string
-  name: string
-  issuer: string
-  date: string
-  credentialId: string
-  url: string
-}
-
-interface LangItem {
-  id: string
-  language: string
-  level: string
-}
-
-interface Achievement {
-  id: string
-  title: string
-  description: string
-  date: string
-}
-
-// ─── Templates ────────────────────────────────────────────────────────────────
-type TemplateId = 'classic' | 'modern' | 'executive' | 'minimal' | 'creative' | 'ats'
-
-interface Template {
-  id: TemplateId
-  name: string
-  desc: string
-  badge: string
-  badgeColor: string
-  preview: { bg: string; accent: string; text: string; secondary: string }
-  atsScore: number
-}
+type TemplateId = 'ats' | 'classic' | 'modern' | 'executive' | 'minimal' | 'creative'
+interface Template { id: TemplateId; name: string; desc: { id: string; en: string }; badge: string; badgeColor: string; accent: string; atsScore: number }
 
 const TEMPLATES: Template[] = [
-  {
-    id: 'ats',
-    name: 'ATS OPTIMIZER',
-    desc: 'Dirancang khusus melewati Applicant Tracking System. Format plain, terstruktur.',
-    badge: '90%+ ATS',
-    badgeColor: '#0fa336',
-    preview: { bg: '#ffffff', accent: '#1c69d4', text: '#0a0a0a', secondary: '#555555' },
-    atsScore: 98,
-  },
-  {
-    id: 'classic',
-    name: 'CLASSIC PROFESSIONAL',
-    desc: 'Hitam putih elegan. Cocok untuk perbankan, hukum, konsultan, finance.',
-    badge: 'PALING POPULER',
-    badgeColor: '#1c69d4',
-    preview: { bg: '#ffffff', accent: '#1a1a1a', text: '#1a1a1a', secondary: '#666666' },
-    atsScore: 95,
-  },
-  {
-    id: 'modern',
-    name: 'MODERN TECH',
-    desc: 'Aksen biru profesional. Ideal untuk software engineer, product manager, data science.',
-    badge: 'TECH',
-    badgeColor: '#0066b1',
-    preview: { bg: '#ffffff', accent: '#0066b1', text: '#1a1a1a', secondary: '#444444' },
-    atsScore: 92,
-  },
-  {
-    id: 'executive',
-    name: 'EXECUTIVE',
-    desc: 'Header bold dengan sidebar. Untuk posisi C-level, VP, Director, dan manajer senior.',
-    badge: 'SENIOR',
-    badgeColor: '#c9a227',
-    preview: { bg: '#ffffff', accent: '#1a1a1a', text: '#1a1a1a', secondary: '#888888' },
-    atsScore: 88,
-  },
-  {
-    id: 'minimal',
-    name: 'MINIMAL CLEAN',
-    desc: 'Tipografi bersih, banyak whitespace. Untuk desainer, penulis, konsultan kreatif.',
-    badge: 'MINIMAL',
-    badgeColor: '#555555',
-    preview: { bg: '#fafafa', accent: '#333333', text: '#222222', secondary: '#777777' },
-    atsScore: 85,
-  },
-  {
-    id: 'creative',
-    name: 'CREATIVE PRO',
-    desc: 'Sidebar warna gelap dengan highlight. Untuk UX/UI designer, marketing, creative director.',
-    badge: 'KREATIF',
-    badgeColor: '#e22718',
-    preview: { bg: '#ffffff', accent: '#e22718', text: '#1a1a1a', secondary: '#555555' },
-    atsScore: 80,
-  },
+  { id: 'ats',       name: 'ATS OPTIMIZER', desc: { id: 'Dirancang melewati ATS. Format bersih, terstruktur sempurna.', en: 'Engineered to pass ATS. Clean, perfectly structured.' },      badge: '98% ATS', badgeColor: '#0fa336', accent: '#1c69d4', atsScore: 98 },
+  { id: 'classic',   name: 'CLASSIC',        desc: { id: 'Hitam putih elegan. Cocok untuk perbankan, hukum, finance.',   en: 'Elegant black & white. Ideal for banking, law, finance.' },    badge: 'POPULER', badgeColor: '#1c69d4', accent: '#1a1a1a', atsScore: 95 },
+  { id: 'modern',    name: 'MODERN TECH',    desc: { id: 'Aksen biru profesional. Ideal untuk software engineer, PM.',   en: 'Professional blue accent. Ideal for engineers & PMs.' },       badge: 'TECH',    badgeColor: '#0066b1', accent: '#0066b1', atsScore: 92 },
+  { id: 'executive', name: 'EXECUTIVE',      desc: { id: 'Header bold premium. Untuk C-level, VP, Director.',           en: 'Premium bold header. For C-level, VP, Director.' },            badge: 'SENIOR',  badgeColor: '#b8860b', accent: '#b8860b', atsScore: 88 },
+  { id: 'minimal',   name: 'MINIMAL',        desc: { id: 'Tipografi bersih, banyak whitespace. Untuk desainer.',        en: 'Clean typography, ample whitespace. For designers.' },          badge: 'CLEAN',   badgeColor: '#555',   accent: '#333333', atsScore: 85 },
+  { id: 'creative',  name: 'CREATIVE',       desc: { id: 'Sidebar gelap dengan aksen. Untuk UX/UI & marketing.',        en: 'Dark sidebar with accent. For UX/UI & marketing.' },            badge: 'KREATIF', badgeColor: '#e22718', accent: '#e22718', atsScore: 80 },
 ]
 
-// ─── Blank CV ─────────────────────────────────────────────────────────────────
-const blankCV = (): CVData => ({
-  personal: { name: '', title: '', email: '', phone: '', location: '', website: '', linkedin: '', github: '', summary: '', photo: '' },
-  experience: [],
-  education: [],
-  skills: [],
-  projects: [],
-  certifications: [],
-  languages: [],
-  achievements: [],
-})
+const ACCENT_COLORS = [
+  { label: 'Navy', value: '#1c3d6e' }, { label: 'Blue', value: '#1c69d4' },
+  { label: 'Sky', value: '#0066b1' },  { label: 'Teal', value: '#0d7377' },
+  { label: 'Black', value: '#1a1a1a' },{ label: 'Gold', value: '#b8860b' },
+  { label: 'Red', value: '#c0392b' },  { label: 'Purple', value: '#6c3483' },
+]
+
+const FS = {
+  small:  { base: 9.5,  h1: 22, h3: 10 },
+  normal: { base: 10.5, h1: 26, h3: 11 },
+  large:  { base: 11.5, h1: 30, h3: 12 },
+}
+
+type Section = 'template' | 'personal' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'languages' | 'preview'
+const SECTIONS: { id: Section; icon: LucideIcon }[] = [
+  { id: 'template', icon: Palette }, { id: 'personal', icon: User },
+  { id: 'experience', icon: Briefcase }, { id: 'education', icon: GraduationCap },
+  { id: 'skills', icon: Code2 }, { id: 'projects', icon: Star },
+  { id: 'certifications', icon: Award }, { id: 'languages', icon: Globe },
+  { id: 'preview', icon: Eye },
+]
 
 const uid = () => Math.random().toString(36).slice(2, 9)
+const blankCV = (): CVData => ({ personal: { name:'', title:'', email:'', phone:'', location:'', website:'', linkedin:'', github:'', summary:'' }, experience:[], education:[], skills:[], projects:[], certifications:[], languages:[] })
+const defaultOpts = (): CVOptions => ({ cvLang: 'id', useIcons: true, accentColor: '#1c69d4', fontSize: 'normal' })
 
-// ─── AI Helper ────────────────────────────────────────────────────────────────
 async function apiCall(payload: { message: string; system?: string; engine: 'gpt' | 'sonar' }) {
-  const res = await fetch('/api/prd-chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
+  const res = await fetch('/api/prd-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const data = await res.json()
   if (data.error) throw new Error(data.error)
   return data as { content: string }
 }
 
-// ─── Section Steps ────────────────────────────────────────────────────────────
-type Section = 'template' | 'personal' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'languages' | 'preview'
-
-interface SectionDef {
-  id: Section
-  label: string
-  icon: LucideIcon
-}
-
-const SECTIONS: SectionDef[] = [
-  { id: 'template',      label: 'Template',      icon: Palette },
-  { id: 'personal',      label: 'Data Diri',     icon: User },
-  { id: 'experience',    label: 'Pengalaman',    icon: Briefcase },
-  { id: 'education',     label: 'Pendidikan',    icon: GraduationCap },
-  { id: 'skills',        label: 'Keahlian',      icon: Code2 },
-  { id: 'projects',      label: 'Proyek',        icon: Star },
-  { id: 'certifications',label: 'Sertifikasi',   icon: Award },
-  { id: 'languages',     label: 'Bahasa',        icon: Globe },
-  { id: 'preview',       label: 'Preview & Unduh', icon: Eye },
-]
-
-// ─── Input Component ──────────────────────────────────────────────────────────
-function Field({ label, value, onChange, placeholder, type = 'text', required }: {
-  label: string; value: string; onChange: (v: string) => void
-  placeholder?: string; type?: string; required?: boolean
-}) {
+// ─── CV Section Block ─────────────────────────────────────────────────────────
+function CVBlock({ title, accent, useIcons, icon: Icon, children, noMargin }: { title: string; accent: string; useIcons: boolean; icon?: LucideIcon; children: React.ReactNode; noMargin?: boolean }) {
   return (
-    <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>
-        {label}{required && <span style={{ color: 'var(--m-red)', marginLeft: 4 }}>*</span>}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="input-base"
-        style={{ height: 42, fontSize: 13 }}
-      />
-    </div>
-  )
-}
-
-function TextArea({ label, value, onChange, placeholder, rows = 4 }: {
-  label: string; value: string; onChange: (v: string) => void; placeholder?: string; rows?: number
-}) {
-  return (
-    <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>
-        {label}
-      </label>
-      <textarea
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        rows={rows}
-        className="input-base"
-        style={{ height: 'auto', resize: 'vertical', fontSize: 13, lineHeight: 1.6 }}
-      />
-    </div>
-  )
-}
-
-// ─── CV Preview Renderers ─────────────────────────────────────────────────────
-function CVPreview({ cv, template }: { cv: CVData; template: Template }) {
-  const t = template.preview
-  const hasExp = cv.experience.length > 0
-  const hasEdu = cv.education.length > 0
-  const hasSkills = cv.skills.length > 0
-  const hasCerts = cv.certifications.length > 0
-  const hasProjects = cv.projects.length > 0
-  const hasLangs = cv.languages.length > 0
-  const hasAchievements = cv.achievements.length > 0
-
-  if (template.id === 'creative') return <CreativeTemplate cv={cv} t={t} />
-  if (template.id === 'executive') return <ExecutiveTemplate cv={cv} t={t} />
-  if (template.id === 'minimal') return <MinimalTemplate cv={cv} t={t} />
-
-  // Default: ATS / Classic / Modern share same layout
-  const isAts = template.id === 'ats'
-  const isModern = template.id === 'modern'
-
-  return (
-    <div id="cv-preview" style={{ background: t.bg, color: t.text, fontFamily: 'Arial, sans-serif', fontSize: 10.5, lineHeight: 1.5, maxWidth: 794, margin: '0 auto', padding: isAts ? '32px 40px' : '36px 44px' }}>
-      {/* Header */}
-      <div style={{ borderBottom: `${isAts ? 1 : 2}px solid ${t.accent}`, paddingBottom: 16, marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div style={{ flex: 1 }}>
-            <h1 style={{ fontSize: isAts ? 22 : 26, fontWeight: 700, color: t.accent, margin: 0, letterSpacing: isAts ? 0 : 0.5, textTransform: isAts ? 'none' : 'uppercase' }}>
-              {cv.personal.name || 'NAMA LENGKAP'}
-            </h1>
-            <p style={{ fontSize: 12, color: isModern ? t.accent : t.secondary, fontWeight: 600, margin: '4px 0 10px', letterSpacing: 0.3 }}>
-              {cv.personal.title || 'Posisi / Jabatan'}
-            </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 20px', fontSize: 9.5 }}>
-              {cv.personal.email && <span>{cv.personal.email}</span>}
-              {cv.personal.phone && <span>{cv.personal.phone}</span>}
-              {cv.personal.location && <span>{cv.personal.location}</span>}
-              {cv.personal.linkedin && <span>{cv.personal.linkedin}</span>}
-              {cv.personal.github && <span>{cv.personal.github}</span>}
-              {cv.personal.website && <span>{cv.personal.website}</span>}
-            </div>
-          </div>
-        </div>
+    <div style={{ marginBottom: noMargin ? 0 : 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+        {useIcons && Icon && <Icon size={10} color={accent} strokeWidth={2.5} />}
+        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '2px', color: accent, textTransform: 'uppercase' }}>{title}</span>
       </div>
-
-      {/* Summary */}
-      {cv.personal.summary && (
-        <CVSection title="RINGKASAN PROFESIONAL" accent={t.accent} isAts={isAts}>
-          <p style={{ color: t.secondary, fontSize: 10.5, lineHeight: 1.6, margin: 0 }}>{cv.personal.summary}</p>
-        </CVSection>
-      )}
-
-      {/* Experience */}
-      {hasExp && (
-        <CVSection title="PENGALAMAN KERJA" accent={t.accent} isAts={isAts}>
-          {cv.experience.map((e, i) => (
-            <div key={e.id} style={{ marginBottom: i < cv.experience.length - 1 ? 14 : 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <p style={{ fontWeight: 700, fontSize: 11, color: t.text, margin: 0 }}>{e.role}</p>
-                  <p style={{ color: t.accent, fontSize: 10.5, fontWeight: 600, margin: '2px 0' }}>{e.company}{e.location && ` · ${e.location}`}</p>
-                </div>
-                <p style={{ fontSize: 9.5, color: t.secondary, whiteSpace: 'nowrap', marginLeft: 12 }}>
-                  {e.startDate} – {e.current ? 'Sekarang' : e.endDate}
-                </p>
-              </div>
-              {e.description && <p style={{ fontSize: 10, color: t.secondary, margin: '4px 0 4px', lineHeight: 1.5 }}>{e.description}</p>}
-              {e.achievements.filter(Boolean).length > 0 && (
-                <ul style={{ margin: '4px 0 0', paddingLeft: 16 }}>
-                  {e.achievements.filter(Boolean).map((a, ai) => (
-                    <li key={ai} style={{ fontSize: 10, color: t.secondary, lineHeight: 1.5, marginBottom: 2 }}>{a}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
-        </CVSection>
-      )}
-
-      {/* Education */}
-      {hasEdu && (
-        <CVSection title="PENDIDIKAN" accent={t.accent} isAts={isAts}>
-          {cv.education.map((e, i) => (
-            <div key={e.id} style={{ marginBottom: i < cv.education.length - 1 ? 10 : 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div>
-                  <p style={{ fontWeight: 700, fontSize: 11, color: t.text, margin: 0 }}>{e.degree}{e.field && ` — ${e.field}`}</p>
-                  <p style={{ color: t.accent, fontSize: 10.5, fontWeight: 600, margin: '2px 0' }}>{e.institution}</p>
-                  {e.gpa && <p style={{ fontSize: 9.5, color: t.secondary, margin: 0 }}>IPK: {e.gpa}{e.honors && ` · ${e.honors}`}</p>}
-                </div>
-                <p style={{ fontSize: 9.5, color: t.secondary, whiteSpace: 'nowrap', marginLeft: 12 }}>
-                  {e.startDate} – {e.current ? 'Sekarang' : e.endDate}
-                </p>
-              </div>
-            </div>
-          ))}
-        </CVSection>
-      )}
-
-      {/* Skills */}
-      {hasSkills && (
-        <CVSection title="KEAHLIAN" accent={t.accent} isAts={isAts}>
-          {cv.skills.map(sg => (
-            <div key={sg.id} style={{ marginBottom: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              {sg.category && <span style={{ fontSize: 10, fontWeight: 700, color: t.text, marginRight: 4 }}>{sg.category}:</span>}
-              <span style={{ fontSize: 10, color: t.secondary }}>{sg.items.join(' · ')}</span>
-            </div>
-          ))}
-        </CVSection>
-      )}
-
-      {/* Projects */}
-      {hasProjects && (
-        <CVSection title="PROYEK" accent={t.accent} isAts={isAts}>
-          {cv.projects.map((p, i) => (
-            <div key={p.id} style={{ marginBottom: i < cv.projects.length - 1 ? 10 : 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <p style={{ fontWeight: 700, fontSize: 11, color: t.text, margin: 0 }}>{p.name}{p.url && <span style={{ fontWeight: 400, color: t.accent, fontSize: 9.5 }}> · {p.url}</span>}</p>
-                {(p.startDate || p.endDate) && <p style={{ fontSize: 9.5, color: t.secondary, marginLeft: 12, whiteSpace: 'nowrap' }}>{p.startDate}{p.endDate && ` – ${p.endDate}`}</p>}
-              </div>
-              {p.tech && <p style={{ fontSize: 9.5, color: t.accent, fontWeight: 600, margin: '2px 0' }}>{p.tech}</p>}
-              {p.description && <p style={{ fontSize: 10, color: t.secondary, lineHeight: 1.5, margin: 0 }}>{p.description}</p>}
-            </div>
-          ))}
-        </CVSection>
-      )}
-
-      {/* Two column row: Certs + Languages */}
-      {(hasCerts || hasLangs || hasAchievements) && (
-        <div style={{ display: 'grid', gridTemplateColumns: hasCerts && hasLangs ? '1fr 1fr' : '1fr', gap: 20, marginTop: 14 }}>
-          {hasCerts && (
-            <CVSection title="SERTIFIKASI" accent={t.accent} isAts={isAts} noMargin>
-              {cv.certifications.map(c => (
-                <div key={c.id} style={{ marginBottom: 6 }}>
-                  <p style={{ fontWeight: 700, fontSize: 10.5, color: t.text, margin: 0 }}>{c.name}</p>
-                  <p style={{ fontSize: 9.5, color: t.secondary, margin: '1px 0 0' }}>{c.issuer}{c.date && ` · ${c.date}`}</p>
-                </div>
-              ))}
-            </CVSection>
-          )}
-          {hasLangs && (
-            <CVSection title="BAHASA" accent={t.accent} isAts={isAts} noMargin>
-              {cv.languages.map(l => (
-                <p key={l.id} style={{ fontSize: 10.5, color: t.secondary, margin: '0 0 4px' }}>
-                  <strong style={{ color: t.text }}>{l.language}</strong> — {l.level}
-                </p>
-              ))}
-            </CVSection>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function CVSection({ title, accent, children, isAts, noMargin }: { title: string; accent: string; children: React.ReactNode; isAts?: boolean; noMargin?: boolean }) {
-  return (
-    <div style={{ marginBottom: noMargin ? 0 : 14 }}>
-      <h2 style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: isAts ? accent : accent, textTransform: 'uppercase', borderBottom: `1px solid ${accent}`, paddingBottom: 3, marginBottom: 8, marginTop: 0 }}>
-        {title}
-      </h2>
+      <div style={{ height: 1.5, background: `linear-gradient(to right, ${accent}, ${accent}44, transparent)`, marginBottom: 10 }} />
       {children}
     </div>
   )
 }
 
-function ExecutiveTemplate({ cv, t }: { cv: CVData; t: Template['preview'] }) {
+// ─── Contact Item ─────────────────────────────────────────────────────────────
+function CI({ icon: Icon, value, useIcons }: { icon: LucideIcon; value: string; useIcons: boolean }) {
+  if (!value) return null
   return (
-    <div id="cv-preview" style={{ background: t.bg, color: t.text, fontFamily: 'Georgia, serif', fontSize: 10.5, maxWidth: 794, margin: '0 auto' }}>
-      {/* Gold header bar */}
-      <div style={{ background: '#1a1a1a', color: '#fff', padding: '32px 44px 24px' }}>
-        <h1 style={{ fontSize: 30, fontWeight: 700, margin: 0, letterSpacing: 1 }}>{cv.personal.name || 'NAMA LENGKAP'}</h1>
-        <p style={{ fontSize: 13, color: '#c9a227', fontWeight: 600, margin: '6px 0 14px', letterSpacing: 0.5 }}>{cv.personal.title || 'Posisi Profesional'}</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 24px', fontSize: 9.5, color: '#ccc' }}>
-          {cv.personal.email && <span>{cv.personal.email}</span>}
-          {cv.personal.phone && <span>{cv.personal.phone}</span>}
-          {cv.personal.location && <span>{cv.personal.location}</span>}
-          {cv.personal.linkedin && <span>{cv.personal.linkedin}</span>}
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3.5 }}>
+      {useIcons && <Icon size={8} strokeWidth={2} />}
+      {value}
+    </span>
+  )
+}
+
+
+// ─── ATS TEMPLATE ─────────────────────────────────────────────────────────────
+type TP = { cv: CVData; opt: CVOptions; accent: string; fs: typeof FS['normal']; t: typeof L['id'] }
+
+function ATSTemplate({ cv, opt, accent, fs, t }: TP) {
+  return (
+    <div style={{ fontFamily: "'Arial','Helvetica',sans-serif", fontSize: fs.base, color: '#111', background: '#fff', padding: '36px 44px', lineHeight: 1.55 }}>
+      <div style={{ borderBottom: `2.5px solid ${accent}`, paddingBottom: 16, marginBottom: 18 }}>
+        <h1 style={{ fontSize: fs.h1, fontWeight: 700, color: '#0a0a0a', margin: '0 0 3px', letterSpacing: 0.3 }}>{cv.personal.name || 'Full Name'}</h1>
+        <p style={{ fontSize: fs.h3, color: accent, fontWeight: 600, margin: '0 0 12px' }}>{cv.personal.title}</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px', fontSize: 9, color: '#555' }}>
+          <CI icon={Mail} value={cv.personal.email} useIcons={opt.useIcons} />
+          <CI icon={Phone} value={cv.personal.phone} useIcons={opt.useIcons} />
+          <CI icon={MapPin} value={cv.personal.location} useIcons={opt.useIcons} />
+          <CI icon={Linkedin} value={cv.personal.linkedin} useIcons={opt.useIcons} />
+          <CI icon={Github} value={cv.personal.github} useIcons={opt.useIcons} />
+          <CI icon={ExternalLink} value={cv.personal.website} useIcons={opt.useIcons} />
         </div>
       </div>
-      <div style={{ padding: '28px 44px' }}>
-        {cv.personal.summary && (
-          <div style={{ marginBottom: 20, borderLeft: '4px solid #c9a227', paddingLeft: 16 }}>
-            <p style={{ fontSize: 11, lineHeight: 1.7, color: t.secondary, margin: 0, fontStyle: 'italic' }}>{cv.personal.summary}</p>
-          </div>
-        )}
-        {cv.experience.length > 0 && (
-          <CVSection title="PENGALAMAN PROFESIONAL" accent="#c9a227">
-            {cv.experience.map((e, i) => (
-              <div key={e.id} style={{ marginBottom: 14 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <p style={{ fontWeight: 700, fontSize: 11.5, margin: 0 }}>{e.role}</p>
-                  <p style={{ fontSize: 9.5, color: t.secondary }}>{e.startDate} – {e.current ? 'Sekarang' : e.endDate}</p>
+      {cv.personal.summary && <CVBlock title={t.headings.summary} accent={accent} useIcons={opt.useIcons} icon={User}><p style={{ fontSize: fs.base, color: '#444', lineHeight: 1.65, margin: 0 }}>{cv.personal.summary}</p></CVBlock>}
+      {cv.experience.length > 0 && (
+        <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} icon={Briefcase}>
+          {cv.experience.map((e, i) => (
+            <div key={e.id} style={{ marginBottom: i < cv.experience.length-1 ? 13 : 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <p style={{ fontWeight: 700, fontSize: fs.h3, color: '#0a0a0a', margin: 0 }}>{e.role}</p>
+                  <p style={{ color: accent, fontSize: fs.base, fontWeight: 600, margin: '2px 0' }}>{e.company}{e.location && ` · ${e.location}`}</p>
                 </div>
-                <p style={{ color: '#c9a227', fontWeight: 700, fontSize: 10.5, margin: '2px 0 4px' }}>{e.company}</p>
-                {e.description && <p style={{ fontSize: 10, color: t.secondary, lineHeight: 1.5 }}>{e.description}</p>}
-                {e.achievements.filter(Boolean).map((a, ai) => <li key={ai} style={{ fontSize: 10, color: t.secondary, lineHeight: 1.5 }}>{a}</li>)}
+                <p style={{ fontSize: 9, color: '#999', whiteSpace: 'nowrap', marginLeft: 10 }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}</p>
+              </div>
+              {e.description && <p style={{ fontSize: fs.base, color: '#555', margin: '4px 0', lineHeight: 1.55 }}>{e.description}</p>}
+              {e.achievements.filter(Boolean).length > 0 && <ul style={{ margin: '3px 0 0', paddingLeft: 14 }}>{e.achievements.filter(Boolean).map((a,ai) => <li key={ai} style={{ fontSize: fs.base, color: '#555', lineHeight: 1.55, marginBottom: 2 }}>{a}</li>)}</ul>}
+            </div>
+          ))}
+        </CVBlock>
+      )}
+      {cv.education.length > 0 && (
+        <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} icon={GraduationCap}>
+          {cv.education.map(e => (
+            <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: fs.h3, color: '#0a0a0a', margin: 0 }}>{e.degree}{e.field && ` — ${e.field}`}</p>
+                <p style={{ color: accent, fontSize: fs.base, fontWeight: 600, margin: '2px 0 0' }}>{e.institution}{e.gpa && ` · ${t.gpa}: ${e.gpa}`}{e.honors && ` · ${e.honors}`}</p>
+              </div>
+              <p style={{ fontSize: 9, color: '#999', whiteSpace: 'nowrap', marginLeft: 10 }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}</p>
+            </div>
+          ))}
+        </CVBlock>
+      )}
+      {cv.skills.length > 0 && (
+        <CVBlock title={t.headings.skills} accent={accent} useIcons={opt.useIcons} icon={Code2}>
+          {cv.skills.map(sg => sg.items.length > 0 && (
+            <div key={sg.id} style={{ display: 'flex', flexWrap: 'wrap', gap: '0 6px', marginBottom: 5, alignItems: 'baseline' }}>
+              {sg.category && <span style={{ fontSize: 9.5, fontWeight: 700, color: '#111', minWidth: 90 }}>{sg.category}:</span>}
+              <span style={{ fontSize: fs.base, color: '#555' }}>{sg.items.join(' · ')}</span>
+            </div>
+          ))}
+        </CVBlock>
+      )}
+      {cv.projects.length > 0 && (
+        <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} icon={Star}>
+          {cv.projects.map(p => (
+            <div key={p.id} style={{ marginBottom: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <p style={{ fontWeight: 700, fontSize: fs.h3, color: '#0a0a0a', margin: 0 }}>{p.name}{p.url && <span style={{ fontWeight: 400, color: accent, fontSize: 9, marginLeft: 5 }}>{p.url}</span>}</p>
+                {p.startDate && <p style={{ fontSize: 9, color: '#999', marginLeft: 10 }}>{p.startDate}{p.endDate && ` – ${p.endDate}`}</p>}
+              </div>
+              {p.tech && <p style={{ fontSize: 9.5, color: accent, fontWeight: 600, margin: '2px 0' }}>{p.tech}</p>}
+              {p.description && <p style={{ fontSize: fs.base, color: '#555', lineHeight: 1.55, margin: 0 }}>{p.description}</p>}
+            </div>
+          ))}
+        </CVBlock>
+      )}
+      {(cv.certifications.length > 0 || cv.languages.length > 0) && (
+        <div style={{ display: 'grid', gridTemplateColumns: cv.certifications.length > 0 && cv.languages.length > 0 ? '1fr 1fr' : '1fr', gap: 20 }}>
+          {cv.certifications.length > 0 && (
+            <CVBlock title={t.headings.certifications} accent={accent} useIcons={opt.useIcons} icon={Award} noMargin>
+              {cv.certifications.map(c => <div key={c.id} style={{ marginBottom: 7 }}><p style={{ fontWeight: 700, fontSize: fs.base, color: '#111', margin: 0 }}>{c.name}</p><p style={{ fontSize: 9, color: '#888', margin: '1px 0 0' }}>{c.issuer}{c.date && ` · ${c.date}`}</p></div>)}
+            </CVBlock>
+          )}
+          {cv.languages.length > 0 && (
+            <CVBlock title={t.headings.languages} accent={accent} useIcons={opt.useIcons} icon={Globe} noMargin>
+              {cv.languages.map(l => <p key={l.id} style={{ fontSize: fs.base, color: '#555', margin: '0 0 5px' }}><strong style={{ color: '#111' }}>{l.language}</strong>{l.level && ` — ${l.level}`}</p>)}
+            </CVBlock>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── CLASSIC TEMPLATE ─────────────────────────────────────────────────────────
+function ClassicTemplate({ cv, opt, accent, fs, t }: TP) {
+  return (
+    <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: fs.base, color: '#111', background: '#fff', padding: '40px 48px', lineHeight: 1.6 }}>
+      <div style={{ textAlign: 'center', paddingBottom: 18, marginBottom: 20, borderBottom: `1px solid ${accent}` }}>
+        <div style={{ height: 3, background: accent, marginBottom: 14 }} />
+        <h1 style={{ fontSize: fs.h1, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#0a0a0a', margin: '0 0 6px' }}>{cv.personal.name || 'FULL NAME'}</h1>
+        {cv.personal.title && <p style={{ fontSize: fs.h3, color: accent, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 12px', fontWeight: 600 }}>{cv.personal.title}</p>}
+        <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '4px 14px', fontSize: 9, color: '#666' }}>
+          <CI icon={Mail} value={cv.personal.email} useIcons={opt.useIcons} />
+          <CI icon={Phone} value={cv.personal.phone} useIcons={opt.useIcons} />
+          <CI icon={MapPin} value={cv.personal.location} useIcons={opt.useIcons} />
+          <CI icon={Linkedin} value={cv.personal.linkedin} useIcons={opt.useIcons} />
+          <CI icon={ExternalLink} value={cv.personal.website} useIcons={opt.useIcons} />
+        </div>
+        <div style={{ height: 3, background: accent, marginTop: 14 }} />
+      </div>
+      {cv.personal.summary && <div style={{ marginBottom: 20, textAlign: 'center' }}><p style={{ fontSize: fs.base, color: '#555', lineHeight: 1.7, fontStyle: 'italic', maxWidth: 560, margin: '0 auto' }}>{cv.personal.summary}</p></div>}
+      {cv.experience.length > 0 && (
+        <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} icon={Briefcase}>
+          {cv.experience.map((e, i) => (
+            <div key={e.id} style={{ marginBottom: i < cv.experience.length-1 ? 14 : 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{e.role}</p>
+                <p style={{ fontSize: 9, color: '#999' }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}</p>
+              </div>
+              <p style={{ color: accent, fontSize: fs.base, fontWeight: 700, margin: '1px 0 4px', fontStyle: 'italic' }}>{e.company}{e.location && `, ${e.location}`}</p>
+              {e.description && <p style={{ fontSize: fs.base, color: '#555', lineHeight: 1.6, margin: '0 0 4px' }}>{e.description}</p>}
+              {e.achievements.filter(Boolean).map((a,ai) => <p key={ai} style={{ fontSize: fs.base, color: '#555', margin: '2px 0', paddingLeft: 12, borderLeft: `2px solid ${accent}44` }}>• {a}</p>)}
+            </div>
+          ))}
+        </CVBlock>
+      )}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <div>
+          {cv.education.length > 0 && (
+            <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} icon={GraduationCap}>
+              {cv.education.map(e => (
+                <div key={e.id} style={{ marginBottom: 10 }}>
+                  <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{e.degree}</p>
+                  {e.field && <p style={{ fontSize: fs.base, color: '#666', margin: '1px 0', fontStyle: 'italic' }}>{e.field}</p>}
+                  <p style={{ color: accent, fontSize: fs.base, fontWeight: 600, margin: '1px 0' }}>{e.institution}</p>
+                  <p style={{ fontSize: 9, color: '#999' }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}{e.gpa && ` · ${t.gpa}: ${e.gpa}`}</p>
+                </div>
+              ))}
+            </CVBlock>
+          )}
+        </div>
+        <div>
+          {cv.skills.length > 0 && (
+            <CVBlock title={t.headings.skills} accent={accent} useIcons={opt.useIcons} icon={Code2}>
+              {cv.skills.map(sg => sg.items.length > 0 && (
+                <div key={sg.id} style={{ marginBottom: 7 }}>
+                  {sg.category && <p style={{ fontSize: 9.5, fontWeight: 700, color: accent, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{sg.category}</p>}
+                  <p style={{ fontSize: fs.base, color: '#555', margin: 0 }}>{sg.items.join(', ')}</p>
+                </div>
+              ))}
+            </CVBlock>
+          )}
+          {cv.languages.length > 0 && (
+            <CVBlock title={t.headings.languages} accent={accent} useIcons={opt.useIcons} icon={Globe}>
+              {cv.languages.map(l => <p key={l.id} style={{ fontSize: fs.base, color: '#555', margin: '0 0 4px' }}><strong>{l.language}</strong>{l.level && ` — ${l.level}`}</p>)}
+            </CVBlock>
+          )}
+          {cv.certifications.length > 0 && (
+            <CVBlock title={t.headings.certifications} accent={accent} useIcons={opt.useIcons} icon={Award}>
+              {cv.certifications.map(c => <div key={c.id} style={{ marginBottom: 6 }}><p style={{ fontSize: fs.base, color: '#111', fontWeight: 700, margin: 0 }}>{c.name}</p><p style={{ fontSize: 9, color: '#999', margin: '1px 0 0' }}>{c.issuer}{c.date && ` · ${c.date}`}</p></div>)}
+            </CVBlock>
+          )}
+        </div>
+      </div>
+      {cv.projects.length > 0 && (
+        <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} icon={Star}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
+            {cv.projects.map(p => (
+              <div key={p.id} style={{ marginBottom: 10 }}>
+                <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{p.name}</p>
+                {p.tech && <p style={{ fontSize: 9.5, color: accent, fontWeight: 600, margin: '2px 0' }}>{p.tech}</p>}
+                {p.description && <p style={{ fontSize: fs.base, color: '#555', lineHeight: 1.5, margin: 0 }}>{p.description}</p>}
               </div>
             ))}
-          </CVSection>
-        )}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          </div>
+        </CVBlock>
+      )}
+    </div>
+  )
+}
+
+// ─── MODERN TEMPLATE ──────────────────────────────────────────────────────────
+function ModernTemplate({ cv, opt, accent, fs, t }: TP) {
+  return (
+    <div style={{ fontFamily: "'Arial','Helvetica',sans-serif", fontSize: fs.base, color: '#111', background: '#fff', lineHeight: 1.55 }}>
+      <div style={{ background: accent, padding: '28px 44px 24px', color: '#fff' }}>
+        <h1 style={{ fontSize: fs.h1, fontWeight: 700, margin: '0 0 4px', color: '#fff' }}>{cv.personal.name || 'Full Name'}</h1>
+        <p style={{ fontSize: fs.h3, fontWeight: 400, margin: '0 0 14px', opacity: 0.9, color: '#fff' }}>{cv.personal.title}</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px', fontSize: 9, opacity: 0.92, color: '#fff' }}>
+          <CI icon={Mail} value={cv.personal.email} useIcons={opt.useIcons} />
+          <CI icon={Phone} value={cv.personal.phone} useIcons={opt.useIcons} />
+          <CI icon={MapPin} value={cv.personal.location} useIcons={opt.useIcons} />
+          <CI icon={Linkedin} value={cv.personal.linkedin} useIcons={opt.useIcons} />
+          <CI icon={Github} value={cv.personal.github} useIcons={opt.useIcons} />
+          <CI icon={ExternalLink} value={cv.personal.website} useIcons={opt.useIcons} />
+        </div>
+      </div>
+      <div style={{ padding: '24px 44px' }}>
+        {cv.personal.summary && <div style={{ marginBottom: 18, padding: '12px 16px', background: `${accent}0d`, borderLeft: `4px solid ${accent}` }}><p style={{ fontSize: fs.base, color: '#444', lineHeight: 1.65, margin: 0 }}>{cv.personal.summary}</p></div>}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 230px', gap: 26 }}>
           <div>
-            {cv.education.length > 0 && (
-              <CVSection title="PENDIDIKAN" accent="#c9a227">
-                {cv.education.map(e => (
-                  <div key={e.id} style={{ marginBottom: 8 }}>
-                    <p style={{ fontWeight: 700, fontSize: 10.5, margin: 0 }}>{e.degree}</p>
-                    <p style={{ color: '#c9a227', fontSize: 10, margin: '1px 0' }}>{e.institution}</p>
-                    <p style={{ fontSize: 9.5, color: t.secondary }}>{e.startDate} – {e.current ? 'Sekarang' : e.endDate}{e.gpa && ` · IPK ${e.gpa}`}</p>
+            {cv.experience.length > 0 && (
+              <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} icon={Briefcase}>
+                {cv.experience.map((e, i) => (
+                  <div key={e.id} style={{ marginBottom: i < cv.experience.length-1 ? 14 : 0, paddingLeft: 10, borderLeft: `2px solid ${accent}22` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <p style={{ fontWeight: 700, fontSize: fs.h3, color: '#0a0a0a', margin: 0 }}>{e.role}</p>
+                      <p style={{ fontSize: 9, color: '#999', marginLeft: 10, whiteSpace: 'nowrap' }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, margin: '2px 0 5px' }}>
+                      <p style={{ color: accent, fontSize: fs.base, fontWeight: 600, margin: 0 }}>{e.company}</p>
+                      {e.location && <span style={{ fontSize: 9, color: '#bbb' }}>· {e.location}</span>}
+                    </div>
+                    {e.description && <p style={{ fontSize: fs.base, color: '#555', lineHeight: 1.55, margin: '0 0 4px' }}>{e.description}</p>}
+                    {e.achievements.filter(Boolean).map((a,ai) => <div key={ai} style={{ display: 'flex', gap: 6, margin: '2px 0' }}><span style={{ color: accent, fontWeight: 700, fontSize: 10, flexShrink: 0 }}>›</span><p style={{ fontSize: fs.base, color: '#555', margin: 0, lineHeight: 1.5 }}>{a}</p></div>)}
                   </div>
                 ))}
-              </CVSection>
+              </CVBlock>
+            )}
+            {cv.projects.length > 0 && (
+              <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} icon={Star}>
+                {cv.projects.map(p => (
+                  <div key={p.id} style={{ marginBottom: 10, paddingLeft: 10, borderLeft: `2px solid ${accent}22` }}>
+                    <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{p.name}{p.url && <span style={{ fontWeight: 400, color: accent, fontSize: 9, marginLeft: 5 }}>{p.url}</span>}</p>
+                    {p.tech && <p style={{ fontSize: 9.5, color: accent, fontWeight: 600, margin: '2px 0' }}>{p.tech}</p>}
+                    {p.description && <p style={{ fontSize: fs.base, color: '#555', lineHeight: 1.5, margin: 0 }}>{p.description}</p>}
+                  </div>
+                ))}
+              </CVBlock>
+            )}
+          </div>
+          <div>
+            {cv.education.length > 0 && (
+              <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} icon={GraduationCap}>
+                {cv.education.map(e => (
+                  <div key={e.id} style={{ marginBottom: 10, padding: '8px 10px', background: '#f8f8f8', borderTop: `2px solid ${accent}` }}>
+                    <p style={{ fontWeight: 700, fontSize: fs.base, margin: 0 }}>{e.degree}</p>
+                    {e.field && <p style={{ fontSize: 9, color: '#777', margin: '1px 0' }}>{e.field}</p>}
+                    <p style={{ color: accent, fontSize: 9.5, fontWeight: 600, margin: '2px 0' }}>{e.institution}</p>
+                    <p style={{ fontSize: 9, color: '#aaa', margin: 0 }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}{e.gpa && ` · ${t.gpa} ${e.gpa}`}</p>
+                  </div>
+                ))}
+              </CVBlock>
+            )}
+            {cv.skills.length > 0 && (
+              <CVBlock title={t.headings.skills} accent={accent} useIcons={opt.useIcons} icon={Code2}>
+                {cv.skills.map(sg => sg.items.length > 0 && (
+                  <div key={sg.id} style={{ marginBottom: 8 }}>
+                    {sg.category && <p style={{ fontSize: 9.5, fontWeight: 700, color: '#111', margin: '0 0 4px' }}>{sg.category}</p>}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                      {sg.items.map((item,i) => <span key={i} style={{ fontSize: 8.5, padding: '2px 7px', background: `${accent}18`, color: accent, fontWeight: 600 }}>{item}</span>)}
+                    </div>
+                  </div>
+                ))}
+              </CVBlock>
+            )}
+            {cv.certifications.length > 0 && (
+              <CVBlock title={t.headings.certifications} accent={accent} useIcons={opt.useIcons} icon={Award}>
+                {cv.certifications.map(c => <div key={c.id} style={{ marginBottom: 6 }}><p style={{ fontWeight: 700, fontSize: fs.base, margin: 0 }}>{c.name}</p><p style={{ fontSize: 9, color: '#999', margin: '1px 0 0' }}>{c.issuer}{c.date && ` · ${c.date}`}</p></div>)}
+              </CVBlock>
+            )}
+            {cv.languages.length > 0 && (
+              <CVBlock title={t.headings.languages} accent={accent} useIcons={opt.useIcons} icon={Globe}>
+                {cv.languages.map(l => <p key={l.id} style={{ fontSize: fs.base, color: '#555', margin: '0 0 4px' }}><strong>{l.language}</strong>{l.level && ` — ${l.level}`}</p>)}
+              </CVBlock>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── EXECUTIVE TEMPLATE ───────────────────────────────────────────────────────
+function ExecutiveTemplate({ cv, opt, accent, fs, t }: TP) {
+  return (
+    <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: fs.base, color: '#111', background: '#fff', lineHeight: 1.6 }}>
+      <div style={{ background: '#111', padding: '32px 48px 28px', color: '#fff' }}>
+        <div style={{ height: 3, background: accent, marginBottom: 18 }} />
+        <h1 style={{ fontSize: fs.h1+4, fontWeight: 700, margin: '0 0 4px', letterSpacing: 2, color: '#fff', textTransform: 'uppercase' }}>{cv.personal.name || 'FULL NAME'}</h1>
+        <p style={{ fontSize: fs.h3+1, color: accent, fontWeight: 600, margin: '0 0 16px', letterSpacing: 1.5 }}>{cv.personal.title}</p>
+        <div style={{ height: 1, background: '#333', marginBottom: 14 }} />
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 22px', fontSize: 9, color: '#bbb' }}>
+          <CI icon={Mail} value={cv.personal.email} useIcons={opt.useIcons} />
+          <CI icon={Phone} value={cv.personal.phone} useIcons={opt.useIcons} />
+          <CI icon={MapPin} value={cv.personal.location} useIcons={opt.useIcons} />
+          <CI icon={Linkedin} value={cv.personal.linkedin} useIcons={opt.useIcons} />
+        </div>
+      </div>
+      <div style={{ padding: '28px 48px' }}>
+        {cv.personal.summary && <div style={{ marginBottom: 22, padding: '14px 20px', borderLeft: `5px solid ${accent}`, background: '#fafafa' }}><p style={{ fontSize: fs.base+0.5, color: '#444', lineHeight: 1.7, margin: 0, fontStyle: 'italic' }}>{cv.personal.summary}</p></div>}
+        {cv.experience.length > 0 && (
+          <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} icon={Briefcase}>
+            {cv.experience.map((e, i) => (
+              <div key={e.id} style={{ marginBottom: i < cv.experience.length-1 ? 16 : 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <p style={{ fontWeight: 700, fontSize: fs.h3+0.5, margin: 0 }}>{e.role}</p>
+                  <p style={{ fontSize: 9, color: '#aaa', fontFamily: 'Arial,sans-serif' }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}</p>
+                </div>
+                <p style={{ color: accent, fontWeight: 700, fontSize: fs.base+0.5, margin: '2px 0 5px', fontStyle: 'italic' }}>{e.company}{e.location && ` · ${e.location}`}</p>
+                {e.description && <p style={{ fontSize: fs.base, color: '#555', lineHeight: 1.6, margin: '0 0 5px' }}>{e.description}</p>}
+                {e.achievements.filter(Boolean).map((a,ai) => <div key={ai} style={{ display: 'flex', gap: 8, margin: '3px 0' }}><span style={{ color: accent, fontWeight: 700 }}>▪</span><p style={{ fontSize: fs.base, color: '#555', margin: 0, lineHeight: 1.55 }}>{a}</p></div>)}
+              </div>
+            ))}
+          </CVBlock>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
+          <div>
+            {cv.education.length > 0 && (
+              <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} icon={GraduationCap}>
+                {cv.education.map(e => (
+                  <div key={e.id} style={{ marginBottom: 10 }}>
+                    <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{e.degree}{e.field && ` — ${e.field}`}</p>
+                    <p style={{ color: accent, fontWeight: 600, fontSize: fs.base, margin: '1px 0', fontStyle: 'italic' }}>{e.institution}</p>
+                    <p style={{ fontSize: 9, color: '#aaa', fontFamily: 'Arial,sans-serif', margin: 0 }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}{e.gpa && ` · ${t.gpa}: ${e.gpa}`}</p>
+                  </div>
+                ))}
+              </CVBlock>
+            )}
+            {cv.certifications.length > 0 && (
+              <CVBlock title={t.headings.certifications} accent={accent} useIcons={opt.useIcons} icon={Award}>
+                {cv.certifications.map(c => <div key={c.id} style={{ marginBottom: 7 }}><p style={{ fontWeight: 700, fontSize: fs.base, margin: 0 }}>{c.name}</p><p style={{ fontSize: 9, color: '#aaa', fontFamily: 'Arial,sans-serif', margin: '1px 0 0' }}>{c.issuer}{c.date && ` · ${c.date}`}</p></div>)}
+              </CVBlock>
             )}
           </div>
           <div>
             {cv.skills.length > 0 && (
-              <CVSection title="KEAHLIAN UTAMA" accent="#c9a227">
-                {cv.skills.map(sg => (
-                  <p key={sg.id} style={{ fontSize: 10, color: t.secondary, marginBottom: 4 }}>
-                    {sg.category && <strong style={{ color: t.text }}>{sg.category}: </strong>}{sg.items.join(', ')}
-                  </p>
+              <CVBlock title={t.headings.skills} accent={accent} useIcons={opt.useIcons} icon={Code2}>
+                {cv.skills.map(sg => sg.items.length > 0 && (
+                  <div key={sg.id} style={{ marginBottom: 8 }}>
+                    {sg.category && <p style={{ fontSize: 9.5, fontWeight: 700, color: '#111', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: 'Arial,sans-serif' }}>{sg.category}</p>}
+                    <p style={{ fontSize: fs.base, color: '#555', margin: 0 }}>{sg.items.join(' · ')}</p>
+                  </div>
                 ))}
-              </CVSection>
+              </CVBlock>
             )}
-            {cv.certifications.length > 0 && (
-              <CVSection title="SERTIFIKASI" accent="#c9a227">
-                {cv.certifications.map(c => (
-                  <p key={c.id} style={{ fontSize: 10, color: t.secondary, marginBottom: 4 }}>{c.name} · {c.issuer}</p>
-                ))}
-              </CVSection>
+            {cv.languages.length > 0 && (
+              <CVBlock title={t.headings.languages} accent={accent} useIcons={opt.useIcons} icon={Globe}>
+                {cv.languages.map(l => <p key={l.id} style={{ fontSize: fs.base, margin: '0 0 4px', color: '#555' }}><strong style={{ color: '#111' }}>{l.language}</strong>{l.level && ` — ${l.level}`}</p>)}
+              </CVBlock>
             )}
           </div>
         </div>
+        {cv.projects.length > 0 && (
+          <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} icon={Star}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 28px' }}>
+              {cv.projects.map(p => (
+                <div key={p.id} style={{ marginBottom: 10 }}>
+                  <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{p.name}</p>
+                  {p.tech && <p style={{ fontSize: 9.5, color: accent, fontWeight: 600, margin: '2px 0', fontStyle: 'italic' }}>{p.tech}</p>}
+                  {p.description && <p style={{ fontSize: fs.base, color: '#555', lineHeight: 1.55, margin: 0 }}>{p.description}</p>}
+                </div>
+              ))}
+            </div>
+          </CVBlock>
+        )}
       </div>
     </div>
   )
 }
 
-function MinimalTemplate({ cv, t }: { cv: CVData; t: Template['preview'] }) {
+// ─── MINIMAL TEMPLATE ─────────────────────────────────────────────────────────
+function MinimalTemplate({ cv, opt, accent, fs, t }: TP) {
   return (
-    <div id="cv-preview" style={{ background: t.bg, color: t.text, fontFamily: 'Helvetica, Arial, sans-serif', fontSize: 10.5, maxWidth: 794, margin: '0 auto', padding: '48px 56px' }}>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 300, letterSpacing: 2, textTransform: 'uppercase', margin: 0, color: t.text }}>{cv.personal.name || 'NAMA LENGKAP'}</h1>
-        <p style={{ fontSize: 11, color: t.secondary, fontWeight: 400, margin: '6px 0 12px', letterSpacing: 1 }}>{cv.personal.title}</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 20px', fontSize: 9.5, color: '#888' }}>
-          {cv.personal.email && <span>{cv.personal.email}</span>}
-          {cv.personal.phone && <span>{cv.personal.phone}</span>}
-          {cv.personal.location && <span>{cv.personal.location}</span>}
-          {cv.personal.linkedin && <span>{cv.personal.linkedin}</span>}
+    <div style={{ fontFamily: "'Helvetica Neue','Helvetica','Arial',sans-serif", fontSize: fs.base, color: '#222', background: '#fafafa', padding: '48px 56px', lineHeight: 1.6 }}>
+      <div style={{ marginBottom: 30 }}>
+        <h1 style={{ fontSize: fs.h1, fontWeight: 300, letterSpacing: 4, textTransform: 'uppercase', margin: '0 0 6px', color: '#111' }}>{cv.personal.name || 'Full Name'}</h1>
+        {cv.personal.title && <p style={{ fontSize: fs.h3-0.5, color: '#999', fontWeight: 400, margin: '0 0 14px', letterSpacing: 2, textTransform: 'uppercase' }}>{cv.personal.title}</p>}
+        <div style={{ width: 48, height: 2, background: accent, marginBottom: 14 }} />
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px', fontSize: 9, color: '#888' }}>
+          <CI icon={Mail} value={cv.personal.email} useIcons={opt.useIcons} />
+          <CI icon={Phone} value={cv.personal.phone} useIcons={opt.useIcons} />
+          <CI icon={MapPin} value={cv.personal.location} useIcons={opt.useIcons} />
+          <CI icon={Linkedin} value={cv.personal.linkedin} useIcons={opt.useIcons} />
+          <CI icon={ExternalLink} value={cv.personal.website} useIcons={opt.useIcons} />
         </div>
       </div>
-      {cv.personal.summary && <p style={{ fontSize: 10.5, lineHeight: 1.7, color: t.secondary, marginBottom: 24, borderTop: '1px solid #ddd', paddingTop: 20 }}>{cv.personal.summary}</p>}
+      {cv.personal.summary && <p style={{ fontSize: fs.base+0.5, lineHeight: 1.75, color: '#666', marginBottom: 28, fontWeight: 300, borderBottom: '1px solid #e0e0e0', paddingBottom: 22 }}>{cv.personal.summary}</p>}
       {cv.experience.length > 0 && (
-        <MinSection title="Pengalaman">
-          {cv.experience.map(e => (
-            <div key={e.id} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '0 20px', marginBottom: 14 }}>
-              <p style={{ fontSize: 9.5, color: '#999', paddingTop: 2 }}>{e.startDate}<br />{e.current ? 'Sekarang' : e.endDate}</p>
-              <div>
-                <p style={{ fontWeight: 600, fontSize: 11, margin: 0 }}>{e.role}</p>
-                <p style={{ fontSize: 10.5, color: t.secondary, margin: '2px 0 4px' }}>{e.company}</p>
-                {e.description && <p style={{ fontSize: 10, color: '#888', lineHeight: 1.5 }}>{e.description}</p>}
-              </div>
-            </div>
-          ))}
-        </MinSection>
-      )}
-      {cv.education.length > 0 && (
-        <MinSection title="Pendidikan">
-          {cv.education.map(e => (
-            <div key={e.id} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '0 20px', marginBottom: 10 }}>
-              <p style={{ fontSize: 9.5, color: '#999', paddingTop: 2 }}>{e.startDate}<br />{e.current ? 'Sekarang' : e.endDate}</p>
-              <div>
-                <p style={{ fontWeight: 600, fontSize: 11, margin: 0 }}>{e.degree}</p>
-                <p style={{ fontSize: 10.5, color: t.secondary, margin: '2px 0' }}>{e.institution}{e.gpa && ` · IPK ${e.gpa}`}</p>
-              </div>
-            </div>
-          ))}
-        </MinSection>
-      )}
-      {cv.skills.length > 0 && (
-        <MinSection title="Keahlian">
-          {cv.skills.map(sg => (
-            <p key={sg.id} style={{ fontSize: 10, color: t.secondary, margin: '0 0 4px' }}>
-              {sg.category && <><strong>{sg.category}</strong> · </>}{sg.items.join(' · ')}
-            </p>
-          ))}
-        </MinSection>
-      )}
-    </div>
-  )
-}
-
-function MinSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div style={{ marginBottom: 24 }}>
-      <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#aaa', borderBottom: '1px solid #e5e5e5', paddingBottom: 6, marginBottom: 14 }}>{title}</p>
-      {children}
-    </div>
-  )
-}
-
-function CreativeTemplate({ cv, t }: { cv: CVData; t: Template['preview'] }) {
-  return (
-    <div id="cv-preview" style={{ background: t.bg, fontFamily: 'Arial, sans-serif', fontSize: 10.5, maxWidth: 794, margin: '0 auto', display: 'grid', gridTemplateColumns: '220px 1fr' }}>
-      {/* Sidebar */}
-      <div style={{ background: '#1a1a1a', color: '#fff', padding: '36px 24px', minHeight: '100%' }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.2 }}>{cv.personal.name || 'NAMA'}</h1>
-          <p style={{ fontSize: 10, color: t.accent, fontWeight: 700, margin: '6px 0', textTransform: 'uppercase', letterSpacing: 1 }}>{cv.personal.title}</p>
+          <p style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: '2.5px', textTransform: 'uppercase', color: accent, marginBottom: 14, borderBottom: '1px solid #e8e8e8', paddingBottom: 6 }}>{t.headings.experience}</p>
+          {cv.experience.map(e => (
+            <div key={e.id} style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '0 22px', marginBottom: 16 }}>
+              <div style={{ paddingTop: 2, textAlign: 'right', color: '#bbb', fontSize: 9, lineHeight: 1.5 }}>{e.startDate}<br />{e.current ? t.present : e.endDate}</div>
+              <div>
+                <p style={{ fontWeight: 600, fontSize: fs.h3-0.5, margin: 0 }}>{e.role}</p>
+                <p style={{ fontSize: fs.base, color: '#888', margin: '2px 0 5px' }}>{e.company}{e.location && `, ${e.location}`}</p>
+                {e.description && <p style={{ fontSize: fs.base-0.5, color: '#777', lineHeight: 1.6, margin: '0 0 4px' }}>{e.description}</p>}
+                {e.achievements.filter(Boolean).map((a,ai) => <p key={ai} style={{ fontSize: fs.base-0.5, color: '#777', margin: '2px 0', paddingLeft: 10 }}>— {a}</p>)}
+              </div>
+            </div>
+          ))}
         </div>
-        <div style={{ borderTop: '1px solid #333', paddingTop: 16, marginBottom: 20 }}>
-          <SideSection title="KONTAK" accent={t.accent}>
-            {cv.personal.email && <p style={{ fontSize: 9.5, color: '#bbb', margin: '0 0 4px', wordBreak: 'break-all' }}>{cv.personal.email}</p>}
-            {cv.personal.phone && <p style={{ fontSize: 9.5, color: '#bbb', margin: '0 0 4px' }}>{cv.personal.phone}</p>}
-            {cv.personal.location && <p style={{ fontSize: 9.5, color: '#bbb', margin: '0 0 4px' }}>{cv.personal.location}</p>}
-            {cv.personal.linkedin && <p style={{ fontSize: 9.5, color: '#bbb', margin: '0 0 4px', wordBreak: 'break-all' }}>{cv.personal.linkedin}</p>}
-          </SideSection>
+      )}
+      <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '0 22px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {cv.skills.length > 0 && (
+            <div>
+              <p style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: '2.5px', textTransform: 'uppercase', color: accent, marginBottom: 8, textAlign: 'right' }}>{t.headings.skills}</p>
+              {cv.skills.map(sg => sg.items.length > 0 && <p key={sg.id} style={{ fontSize: 9, color: '#888', textAlign: 'right', margin: '0 0 3px', lineHeight: 1.5 }}>{sg.items.join(', ')}</p>)}
+            </div>
+          )}
+          {cv.languages.length > 0 && (
+            <div>
+              <p style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: '2.5px', textTransform: 'uppercase', color: accent, marginBottom: 8, textAlign: 'right' }}>{t.headings.languages}</p>
+              {cv.languages.map(l => <p key={l.id} style={{ fontSize: 9, color: '#888', textAlign: 'right', margin: '0 0 3px' }}>{l.language}</p>)}
+            </div>
+          )}
+        </div>
+        <div style={{ borderLeft: '1px solid #e0e0e0', paddingLeft: 22 }}>
+          {cv.education.length > 0 && (
+            <div style={{ marginBottom: 18 }}>
+              <p style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: '2.5px', textTransform: 'uppercase', color: accent, marginBottom: 10 }}>{t.headings.education}</p>
+              {cv.education.map(e => (
+                <div key={e.id} style={{ marginBottom: 10 }}>
+                  <p style={{ fontWeight: 600, fontSize: fs.base-0.5, margin: 0 }}>{e.degree}{e.field && ` — ${e.field}`}</p>
+                  <p style={{ fontSize: 9, color: '#888', margin: '2px 0' }}>{e.institution} · {e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}{e.gpa && ` · ${t.gpa} ${e.gpa}`}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          {cv.projects.length > 0 && (
+            <div style={{ marginBottom: 18 }}>
+              <p style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: '2.5px', textTransform: 'uppercase', color: accent, marginBottom: 10 }}>{t.headings.projects}</p>
+              {cv.projects.map(p => <div key={p.id} style={{ marginBottom: 8 }}><p style={{ fontWeight: 600, fontSize: fs.base-0.5, margin: 0 }}>{p.name}{p.tech && <span style={{ fontSize: 9, color: accent, fontWeight: 400, marginLeft: 5 }}>{p.tech}</span>}</p>{p.description && <p style={{ fontSize: 9, color: '#888', margin: '1px 0 0' }}>{p.description}</p>}</div>)}
+            </div>
+          )}
+          {cv.certifications.length > 0 && (
+            <div>
+              <p style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: '2.5px', textTransform: 'uppercase', color: accent, marginBottom: 10 }}>{t.headings.certifications}</p>
+              {cv.certifications.map(c => <p key={c.id} style={{ fontSize: 9, color: '#888', margin: '0 0 4px' }}>{c.name} · {c.issuer}</p>)}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── CREATIVE TEMPLATE ────────────────────────────────────────────────────────
+function CreativeTemplate({ cv, opt, accent, fs, t }: TP) {
+  return (
+    <div style={{ fontFamily: "'Arial','Helvetica',sans-serif", fontSize: fs.base, background: '#fff', lineHeight: 1.55, display: 'grid', gridTemplateColumns: '200px 1fr', minHeight: 900 }}>
+      <div style={{ background: '#111', color: '#fff', padding: '30px 20px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div>
+          <h1 style={{ fontSize: fs.h1-4, fontWeight: 700, color: '#fff', margin: '0 0 8px', lineHeight: 1.2 }}>{cv.personal.name || 'Name'}</h1>
+          <div style={{ height: 3, background: accent, margin: '0 0 10px' }} />
+          <p style={{ fontSize: 9.5, color: accent, fontWeight: 700, margin: 0, textTransform: 'uppercase', letterSpacing: 1 }}>{cv.personal.title}</p>
+        </div>
+        <div>
+          <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: '2px', color: accent, textTransform: 'uppercase', marginBottom: 10, borderBottom: '1px solid #2a2a2a', paddingBottom: 5 }}>{t.contact}</p>
+          {cv.personal.email && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'flex-start' }}>{opt.useIcons && <Mail size={8.5} style={{ marginTop: 1.5, flexShrink: 0, color: accent }} />}<span style={{ fontSize: 9, color: '#ccc', wordBreak: 'break-all' }}>{cv.personal.email}</span></div>}
+          {cv.personal.phone && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'center' }}>{opt.useIcons && <Phone size={8.5} style={{ flexShrink: 0, color: accent }} />}<span style={{ fontSize: 9, color: '#ccc' }}>{cv.personal.phone}</span></div>}
+          {cv.personal.location && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'center' }}>{opt.useIcons && <MapPin size={8.5} style={{ flexShrink: 0, color: accent }} />}<span style={{ fontSize: 9, color: '#ccc' }}>{cv.personal.location}</span></div>}
+          {cv.personal.linkedin && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'flex-start' }}>{opt.useIcons && <Linkedin size={8.5} style={{ marginTop: 1.5, flexShrink: 0, color: accent }} />}<span style={{ fontSize: 9, color: '#ccc', wordBreak: 'break-all' }}>{cv.personal.linkedin}</span></div>}
+          {cv.personal.github && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'center' }}>{opt.useIcons && <Github size={8.5} style={{ flexShrink: 0, color: accent }} />}<span style={{ fontSize: 9, color: '#ccc' }}>{cv.personal.github}</span></div>}
+          {cv.personal.website && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'flex-start' }}>{opt.useIcons && <ExternalLink size={8.5} style={{ marginTop: 1.5, flexShrink: 0, color: accent }} />}<span style={{ fontSize: 9, color: '#ccc', wordBreak: 'break-all' }}>{cv.personal.website}</span></div>}
         </div>
         {cv.skills.length > 0 && (
-          <SideSection title="KEAHLIAN" accent={t.accent}>
-            {cv.skills.map(sg => (
-              <div key={sg.id} style={{ marginBottom: 8 }}>
-                {sg.category && <p style={{ fontSize: 9.5, fontWeight: 700, color: '#ddd', margin: '0 0 3px' }}>{sg.category}</p>}
+          <div>
+            <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: '2px', color: accent, textTransform: 'uppercase', marginBottom: 10, borderBottom: '1px solid #2a2a2a', paddingBottom: 5 }}>{t.headings.skills}</p>
+            {cv.skills.map(sg => sg.items.length > 0 && (
+              <div key={sg.id} style={{ marginBottom: 10 }}>
+                {sg.category && <p style={{ fontSize: 9, fontWeight: 700, color: '#ddd', margin: '0 0 5px' }}>{sg.category}</p>}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                  {sg.items.map((item, i) => (
-                    <span key={i} style={{ fontSize: 8.5, background: '#333', color: '#ccc', padding: '2px 6px', borderRadius: 2 }}>{item}</span>
-                  ))}
+                  {sg.items.map((item,i) => <span key={i} style={{ fontSize: 8, background: '#1e1e1e', color: '#bbb', padding: '2px 6px', border: `1px solid ${accent}44` }}>{item}</span>)}
                 </div>
               </div>
             ))}
-          </SideSection>
-        )}
-        {cv.languages.length > 0 && (
-          <SideSection title="BAHASA" accent={t.accent}>
-            {cv.languages.map(l => (
-              <p key={l.id} style={{ fontSize: 9.5, color: '#bbb', margin: '0 0 4px' }}><strong style={{ color: '#fff' }}>{l.language}</strong> · {l.level}</p>
-            ))}
-          </SideSection>
-        )}
-        {cv.certifications.length > 0 && (
-          <SideSection title="SERTIFIKASI" accent={t.accent}>
-            {cv.certifications.map(c => (
-              <p key={c.id} style={{ fontSize: 9.5, color: '#bbb', margin: '0 0 6px' }}><strong style={{ color: '#fff' }}>{c.name}</strong><br />{c.issuer}</p>
-            ))}
-          </SideSection>
-        )}
-      </div>
-
-      {/* Main */}
-      <div style={{ padding: '36px 32px', color: '#1a1a1a' }}>
-        {cv.personal.summary && (
-          <div style={{ marginBottom: 20, paddingBottom: 16, borderBottom: '2px solid ' + t.accent }}>
-            <p style={{ fontSize: 10.5, lineHeight: 1.7, color: '#555', margin: 0 }}>{cv.personal.summary}</p>
           </div>
         )}
+        {cv.languages.length > 0 && (
+          <div>
+            <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: '2px', color: accent, textTransform: 'uppercase', marginBottom: 10, borderBottom: '1px solid #2a2a2a', paddingBottom: 5 }}>{t.headings.languages}</p>
+            {cv.languages.map(l => <p key={l.id} style={{ fontSize: 9, color: '#ccc', margin: '0 0 5px' }}><strong style={{ color: '#fff' }}>{l.language}</strong>{l.level && ` · ${l.level}`}</p>)}
+          </div>
+        )}
+        {cv.certifications.length > 0 && (
+          <div>
+            <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: '2px', color: accent, textTransform: 'uppercase', marginBottom: 10, borderBottom: '1px solid #2a2a2a', paddingBottom: 5 }}>{t.headings.certifications}</p>
+            {cv.certifications.map(c => <div key={c.id} style={{ marginBottom: 7 }}><p style={{ fontSize: 9, fontWeight: 700, color: '#fff', margin: 0 }}>{c.name}</p><p style={{ fontSize: 8.5, color: '#aaa', margin: '1px 0 0' }}>{c.issuer}{c.date && ` · ${c.date}`}</p></div>)}
+          </div>
+        )}
+      </div>
+      <div style={{ padding: '30px 28px', color: '#111' }}>
+        {cv.personal.summary && <div style={{ marginBottom: 20, paddingBottom: 18, borderBottom: `2px solid ${accent}` }}><p style={{ fontSize: fs.base+0.5, color: '#555', lineHeight: 1.7, margin: 0 }}>{cv.personal.summary}</p></div>}
         {cv.experience.length > 0 && (
-          <CVSection title="PENGALAMAN KERJA" accent={t.accent}>
-            {cv.experience.map(e => (
-              <div key={e.id} style={{ marginBottom: 14 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <p style={{ fontWeight: 700, fontSize: 11, margin: 0 }}>{e.role}</p>
-                  <p style={{ fontSize: 9.5, color: '#888' }}>{e.startDate} – {e.current ? 'Sekarang' : e.endDate}</p>
+          <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} icon={Briefcase}>
+            {cv.experience.map((e, i) => (
+              <div key={e.id} style={{ marginBottom: i < cv.experience.length-1 ? 14 : 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{e.role}</p>
+                  <span style={{ fontSize: 8.5, color: '#fff', background: accent, padding: '2px 8px', whiteSpace: 'nowrap', marginLeft: 10, flexShrink: 0 }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}</span>
                 </div>
-                <p style={{ color: t.accent, fontWeight: 700, fontSize: 10.5, margin: '2px 0 4px' }}>{e.company}</p>
-                {e.description && <p style={{ fontSize: 10, color: '#555', lineHeight: 1.5 }}>{e.description}</p>}
-                {e.achievements.filter(Boolean).map((a, ai) => (
-                  <p key={ai} style={{ fontSize: 10, color: '#555', margin: '2px 0', paddingLeft: 12, borderLeft: '2px solid ' + t.accent }}>• {a}</p>
-                ))}
+                <p style={{ color: accent, fontWeight: 700, fontSize: fs.base, margin: '2px 0 5px' }}>{e.company}{e.location && ` · ${e.location}`}</p>
+                {e.description && <p style={{ fontSize: fs.base, color: '#555', lineHeight: 1.55, margin: '0 0 4px' }}>{e.description}</p>}
+                {e.achievements.filter(Boolean).map((a,ai) => <p key={ai} style={{ fontSize: fs.base, color: '#555', margin: '2px 0', paddingLeft: 10, borderLeft: `2px solid ${accent}` }}>• {a}</p>)}
               </div>
             ))}
-          </CVSection>
+          </CVBlock>
         )}
         {cv.education.length > 0 && (
-          <CVSection title="PENDIDIKAN" accent={t.accent}>
+          <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} icon={GraduationCap}>
             {cv.education.map(e => (
-              <div key={e.id} style={{ marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <p style={{ fontWeight: 700, fontSize: 11, margin: 0 }}>{e.degree}{e.field && ` · ${e.field}`}</p>
-                  <p style={{ fontSize: 9.5, color: '#888' }}>{e.startDate} – {e.current ? 'Sekarang' : e.endDate}</p>
+              <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                <div>
+                  <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{e.degree}{e.field && ` — ${e.field}`}</p>
+                  <p style={{ color: accent, fontWeight: 600, fontSize: fs.base, margin: '2px 0 0' }}>{e.institution}{e.gpa && ` · ${t.gpa}: ${e.gpa}`}</p>
                 </div>
-                <p style={{ color: t.accent, fontWeight: 600, fontSize: 10.5, margin: '2px 0' }}>{e.institution}</p>
+                <p style={{ fontSize: 9, color: '#999', marginLeft: 10, whiteSpace: 'nowrap' }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}</p>
               </div>
             ))}
-          </CVSection>
+          </CVBlock>
         )}
         {cv.projects.length > 0 && (
-          <CVSection title="PROYEK" accent={t.accent}>
+          <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} icon={Star}>
             {cv.projects.map(p => (
               <div key={p.id} style={{ marginBottom: 10 }}>
-                <p style={{ fontWeight: 700, fontSize: 11, margin: 0 }}>{p.name}</p>
-                {p.tech && <p style={{ fontSize: 9.5, color: t.accent, fontWeight: 600, margin: '2px 0' }}>{p.tech}</p>}
-                {p.description && <p style={{ fontSize: 10, color: '#555', lineHeight: 1.5 }}>{p.description}</p>}
+                <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{p.name}{p.url && <span style={{ fontWeight: 400, fontSize: 9, color: accent, marginLeft: 5 }}>{p.url}</span>}</p>
+                {p.tech && <p style={{ fontSize: 9.5, color: accent, fontWeight: 600, margin: '2px 0' }}>{p.tech}</p>}
+                {p.description && <p style={{ fontSize: fs.base, color: '#555', lineHeight: 1.5, margin: 0 }}>{p.description}</p>}
               </div>
             ))}
-          </CVSection>
+          </CVBlock>
         )}
       </div>
     </div>
   )
 }
 
-function SideSection({ title, accent, children }: { title: string; accent: string; children: React.ReactNode }) {
-  return (
-    <div style={{ marginBottom: 18 }}>
-      <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', color: accent, textTransform: 'uppercase', marginBottom: 8, borderBottom: '1px solid #333', paddingBottom: 4 }}>{title}</p>
-      {children}
-    </div>
-  )
+// ─── CV PREVIEW ROUTER ────────────────────────────────────────────────────────
+function CVPreview({ cv, template, opt }: { cv: CVData; template: Template; opt: CVOptions }) {
+  const accent = opt.accentColor || template.accent
+  const fs = FS[opt.fontSize]
+  const t = L[opt.cvLang]
+  const p = { cv, opt, accent, fs, t }
+  if (template.id === 'classic')   return <ClassicTemplate {...p} />
+  if (template.id === 'modern')    return <ModernTemplate {...p} />
+  if (template.id === 'executive') return <ExecutiveTemplate {...p} />
+  if (template.id === 'minimal')   return <MinimalTemplate {...p} />
+  if (template.id === 'creative')  return <CreativeTemplate {...p} />
+  return <ATSTemplate {...p} />
 }
 
-// ─── ATS Score Widget ─────────────────────────────────────────────────────────
-function ATSScore({ cv, template }: { cv: CVData; template: Template }) {
-  const checks = [
-    { label: 'Nama lengkap diisi',          pass: !!cv.personal.name },
-    { label: 'Email diisi',                  pass: !!cv.personal.email },
-    { label: 'Nomor telepon diisi',          pass: !!cv.personal.phone },
-    { label: 'Ringkasan profesional diisi',  pass: cv.personal.summary.length > 50 },
-    { label: 'Minimal 1 pengalaman kerja',   pass: cv.experience.length >= 1 },
-    { label: 'Deskripsi pengalaman lengkap', pass: cv.experience.every(e => e.description.length > 30) },
-    { label: 'Minimal 1 pendidikan',         pass: cv.education.length >= 1 },
-    { label: 'Minimal 3 skill/keahlian',     pass: cv.skills.flatMap(s => s.items).length >= 3 },
-    { label: 'LinkedIn / Website diisi',     pass: !!(cv.personal.linkedin || cv.personal.website) },
-    { label: 'Template ATS-friendly',        pass: template.atsScore >= 90 },
-  ]
-  const passed = checks.filter(c => c.pass).length
-  const score = Math.round((passed / checks.length) * 100)
-  const color = score >= 80 ? 'var(--success)' : score >= 60 ? 'var(--warning)' : 'var(--m-red)'
 
+// ─── ATS SCORE PANEL ─────────────────────────────────────────────────────────
+function ATSScorePanel({ cv, template, t }: { cv: CVData; template: Template; t: typeof L['id'] }) {
+  const passes = [
+    !!cv.personal.name,
+    !!cv.personal.email,
+    !!cv.personal.phone,
+    cv.personal.summary.length >= 50,
+    cv.experience.length >= 1,
+    cv.experience.length > 0 && cv.experience.every(e => e.description.length > 20),
+    cv.education.length >= 1,
+    cv.skills.flatMap(s => s.items).length >= 3,
+    !!(cv.personal.linkedin || cv.personal.website),
+    template.atsScore >= 90,
+  ]
+  const score = Math.round((passes.filter(Boolean).length / passes.length) * 100)
+  const color = score >= 80 ? '#0fa336' : score >= 60 ? '#f4b400' : '#e22718'
   return (
     <div style={{ background: 'var(--surface-card)', border: '1px solid var(--hairline)', padding: 20, marginBottom: 16 }}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div>
-          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 2 }}>SKOR ATS</p>
-          <p style={{ fontSize: 28, fontWeight: 700, color, lineHeight: 1 }}>{score}<span style={{ fontSize: 14 }}>%</span></p>
+          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 2 }}>{t.atsScore}</p>
+          <p style={{ fontSize: 30, fontWeight: 700, color, lineHeight: 1 }}>{score}<span style={{ fontSize: 14 }}>%</span></p>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <p style={{ fontSize: 11, color: 'var(--body)', fontWeight: 300 }}>
-            {score >= 80 ? '✓ Siap dikirim ke perusahaan' : score >= 60 ? '⚠ Masih perlu perbaikan' : '✗ Lengkapi CV terlebih dahulu'}
-          </p>
-          <p style={{ fontSize: 10, color: 'var(--muted)' }}>{passed}/{checks.length} kriteria terpenuhi</p>
-        </div>
+        <p style={{ fontSize: 11, color: 'var(--body)', fontWeight: 300, textAlign: 'right' }}>{score >= 80 ? t.atsReady : score >= 60 ? t.atsWarn : t.atsFail}</p>
       </div>
-      <div style={{ height: 4, background: 'var(--surface-elevated)', marginBottom: 16 }}>
+      <div style={{ height: 4, background: 'var(--surface-elevated)', marginBottom: 14 }}>
         <div style={{ height: 4, background: color, width: `${score}%`, transition: 'width 0.5s' }} />
       </div>
-      <div className="grid grid-cols-1 gap-1">
-        {checks.map((c, i) => (
+      <div className="grid grid-cols-1 gap-1.5">
+        {t.checks.map((label, i) => (
           <div key={i} className="flex items-center gap-2">
-            <div style={{ width: 14, height: 14, background: c.pass ? 'var(--success)' : 'var(--surface-elevated)', border: `1px solid ${c.pass ? 'var(--success)' : 'var(--hairline)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              {c.pass && <Check size={9} style={{ color: '#fff' }} />}
+            <div style={{ width: 14, height: 14, background: passes[i] ? '#0fa336' : 'var(--surface-elevated)', border: `1px solid ${passes[i] ? '#0fa336' : 'var(--hairline)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {passes[i] && <Check size={9} style={{ color: '#fff' }} />}
             </div>
-            <p style={{ fontSize: 10.5, color: c.pass ? 'var(--body)' : 'var(--muted)', margin: 0 }}>{c.label}</p>
+            <p style={{ fontSize: 11, color: passes[i] ? 'var(--body)' : 'var(--muted)', margin: 0 }}>{label}</p>
           </div>
         ))}
       </div>
@@ -712,48 +719,79 @@ function ATSScore({ cv, template }: { cv: CVData; template: Template }) {
   )
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── FORM HELPERS ─────────────────────────────────────────────────────────────
+function Field({ label, value, onChange, placeholder, type = 'text', required }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; required?: boolean }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 5 }}>
+        {label}{required && <span style={{ color: 'var(--m-red)', marginLeft: 4 }}>*</span>}
+      </label>
+      <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="input-base" style={{ height: 40, fontSize: 13 }} />
+    </div>
+  )
+}
+
+function SH({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div style={{ marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--hairline)' }}>
+      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--ink)', textTransform: 'uppercase', marginBottom: 3 }}>{title}</h2>
+      <p style={{ fontSize: 12, fontWeight: 300, color: 'var(--muted)', lineHeight: 1.5 }}>{desc}</p>
+    </div>
+  )
+}
+
+function AddBtn({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="flex items-center gap-2"
+      style={{ width: '100%', height: 42, background: 'var(--surface-card)', border: '1px dashed var(--hairline)', color: 'var(--muted)', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', cursor: 'pointer', justifyContent: 'center' }}>
+      <Plus size={13} /> {label}
+    </button>
+  )
+}
+
+
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function CVGenerator({ lang }: { lang: Lang }) {
   const [cv, setCV] = useState<CVData>(blankCV())
+  const [opt, setOpt] = useState<CVOptions>(defaultOpts())
   const [template, setTemplate] = useState<Template>(TEMPLATES[0])
   const [section, setSection] = useState<Section>('template')
-  const [aiLoading, setAiLoading] = useState<string>('')
+  const [aiLoading, setAiLoading] = useState('')
   const [aiError, setAiError] = useState('')
   const [downloading, setDownloading] = useState(false)
-  const [showPreviewMobile, setShowPreviewMobile] = useState(false)
-  const previewRef = useRef<HTMLDivElement>(null)
+  const [skillInput, setSkillInput] = useState<Record<string, string>>({})
 
-  const updatePersonal = (key: keyof CVData['personal'], val: string) =>
-    setCV(p => ({ ...p, personal: { ...p.personal, [key]: val } }))
+  const t = L[opt.cvLang]
+  const sIdx = SECTIONS.findIndex(s => s.id === section)
+  const setOp = (k: keyof CVOptions, v: unknown) => setOpt(p => ({ ...p, [k]: v }))
+  const upP = (k: keyof CVData['personal'], v: string) => setCV(p => ({ ...p, personal: { ...p.personal, [k]: v } }))
 
-  const sectionIdx = SECTIONS.findIndex(s => s.id === section)
-  const canGoBack = sectionIdx > 0
-  const canGoNext = sectionIdx < SECTIONS.length - 1
-
-  // ── AI Enhance ──
-  const aiEnhanceSummary = async () => {
-    if (!cv.personal.name && !cv.personal.title) { setAiError('Isi nama dan jabatan terlebih dahulu'); return }
+  // ── AI ──
+  const aiSummary = async () => {
     setAiLoading('summary'); setAiError('')
     try {
-      const ctx = `Nama: ${cv.personal.name}\nJabatan: ${cv.personal.title}\nPengalaman: ${cv.experience.map(e => `${e.role} di ${e.company}`).join(', ')}\nKeahlian: ${cv.skills.flatMap(s => s.items).join(', ')}`
       const r = await apiCall({
-        message: ctx,
-        system: 'Kamu adalah expert CV writer. Buat ringkasan profesional (professional summary) dalam BAHASA INDONESIA yang kuat, impactful, dan ATS-friendly. Maksimal 4 kalimat. Gunakan action verbs. Sertakan metrik jika memungkinkan. Langsung tulis teks ringkasannya saja, tanpa label atau preamble.',
+        message: `Name: ${cv.personal.name}\nTitle: ${cv.personal.title}\nExp: ${cv.experience.map(e => `${e.role} at ${e.company}`).join(', ')}\nSkills: ${cv.skills.flatMap(s => s.items).join(', ')}`,
+        system: opt.cvLang === 'id'
+          ? 'Expert CV writer. Buat professional summary dalam BAHASA INDONESIA yang kuat, impactful, ATS-friendly. Maks 3-4 kalimat. Gunakan action verbs. Langsung tulis teksnya saja.'
+          : 'Expert CV writer. Write a strong, impactful, ATS-friendly professional summary in ENGLISH. Max 3-4 sentences. Use action verbs. Write only the text.',
         engine: 'gpt',
       })
-      updatePersonal('summary', r.content.trim())
+      upP('summary', r.content.trim())
     } catch (e: unknown) { setAiError(e instanceof Error ? e.message : 'Error') }
     setAiLoading('')
   }
 
-  const aiEnhanceExp = async (id: string) => {
+  const aiExp = async (id: string) => {
     const exp = cv.experience.find(e => e.id === id)
     if (!exp) return
     setAiLoading('exp-' + id); setAiError('')
     try {
       const r = await apiCall({
-        message: `Role: ${exp.role}\nPerusahaan: ${exp.company}\nDeskripsi: ${exp.description || 'kosong'}`,
-        system: 'Kamu adalah expert CV writer. Tulis ulang deskripsi pengalaman kerja ini dalam BAHASA INDONESIA yang lebih kuat dan ATS-friendly. Gunakan action verbs (memimpin, mengembangkan, meningkatkan, dll). Sertakan dampak dan metrik kuantitatif jika bisa. Maksimal 2 kalimat. Langsung tulis teksnya saja.',
+        message: `Role: ${exp.role}\nCompany: ${exp.company}\nDesc: ${exp.description}`,
+        system: opt.cvLang === 'id'
+          ? 'Expert CV writer. Tulis ulang dalam BAHASA INDONESIA lebih kuat, action verbs, metrik. Maks 2 kalimat. Langsung tulis.'
+          : 'Expert CV writer. Rewrite in ENGLISH stronger, action verbs, metrics. Max 2 sentences. Write directly.',
         engine: 'gpt',
       })
       setCV(p => ({ ...p, experience: p.experience.map(e => e.id === id ? { ...e, description: r.content.trim() } : e) }))
@@ -761,566 +799,517 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
     setAiLoading('')
   }
 
-  const aiSuggestSkills = async () => {
-    if (!cv.personal.title && cv.experience.length === 0) { setAiError('Isi jabatan atau pengalaman kerja terlebih dahulu'); return }
+  const aiSkills = async () => {
     setAiLoading('skills'); setAiError('')
     try {
       const r = await apiCall({
-        message: `Jabatan: ${cv.personal.title}\nPengalaman: ${cv.experience.map(e => e.role + ' di ' + e.company).join(', ')}`,
-        system: 'Kamu adalah expert CV writer. Berikan rekomendasi 15-20 skill/keahlian yang relevan untuk profil ini dalam BAHASA INDONESIA, dikelompokkan menjadi: Technical Skills, Soft Skills, Tools & Software. Format: Technical Skills: skill1, skill2, skill3\nSoft Skills: skill1, skill2\nTools & Software: tool1, tool2. Langsung output formatnya saja.',
+        message: `Title: ${cv.personal.title}\nExp: ${cv.experience.map(e => e.role + ' at ' + e.company).join(', ')}`,
+        system: opt.cvLang === 'id'
+          ? 'Expert CV writer. 15-20 skill relevan BAHASA INDONESIA. Format:\nTechnical Skills: skill1, skill2\nSoft Skills: skill1, skill2\nTools & Software: tool1, tool2\nHanya format ini.'
+          : 'Expert CV writer. 15-20 relevant skills in ENGLISH. Format:\nTechnical Skills: skill1, skill2\nSoft Skills: skill1, skill2\nTools & Software: tool1, tool2\nOnly this format.',
         engine: 'gpt',
       })
-      const lines = r.content.trim().split('\n').filter(Boolean)
-      const newSkills: SkillGroup[] = []
-      lines.forEach(line => {
+      const skills = r.content.trim().split('\n').filter(l => l.includes(':')).map(line => {
         const [cat, items] = line.split(':')
-        if (cat && items) {
-          newSkills.push({ id: uid(), category: cat.trim(), items: items.split(',').map(s => s.trim()).filter(Boolean) })
-        }
-      })
-      if (newSkills.length > 0) setCV(p => ({ ...p, skills: newSkills }))
+        return { id: uid(), category: cat?.trim() || '', items: items?.split(',').map(s => s.trim()).filter(Boolean) || [] }
+      }).filter(s => s.items.length > 0)
+      if (skills.length > 0) setCV(p => ({ ...p, skills }))
     } catch (e: unknown) { setAiError(e instanceof Error ? e.message : 'Error') }
     setAiLoading('')
   }
 
-  // ── Download PDF ──
+  // ── Download ──
   const downloadPDF = async () => {
     setDownloading(true)
     try {
-      const el = document.getElementById('cv-preview')
-      if (!el) return
+      const el = document.getElementById('cv-render')
+      if (!el) throw new Error('Preview not found')
       const html2canvas = (await import('html2canvas')).default
       const { jsPDF } = await import('jspdf')
-      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' })
-      const imgData = canvas.toDataURL('image/png')
+      const canvas = await html2canvas(el, { scale: 2.5, useCORS: true, backgroundColor: '#ffffff', logging: false })
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
       const w = pdf.internal.pageSize.getWidth()
-      const h = (canvas.height * w) / canvas.width
-      pdf.addImage(imgData, 'PNG', 0, 0, w, h)
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, w, (canvas.height * w) / canvas.width)
       pdf.save(`${cv.personal.name || 'CV'}-${template.id}.pdf`)
-    } catch (e: unknown) { setAiError('Gagal download PDF: ' + (e instanceof Error ? e.message : String(e))) }
+    } catch (e: unknown) { setAiError('PDF: ' + (e instanceof Error ? e.message : String(e))) }
     setDownloading(false)
   }
 
   const downloadHTML = () => {
-    const el = document.getElementById('cv-preview')
+    const el = document.getElementById('cv-render')
     if (!el) return
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>CV - ${cv.personal.name}</title><style>*{box-sizing:border-box}body{margin:0;padding:20px;background:#f5f5f5;display:flex;justify-content:center}#cv-preview{width:794px}</style></head><body>${el.outerHTML}</body></html>`
-    const blob = new Blob([html], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a'); a.href = url; a.download = `${cv.personal.name || 'CV'}-${template.id}.html`; a.click()
-    URL.revokeObjectURL(url)
+    const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>CV</title><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#eee;display:flex;justify-content:center;padding:20px}#cv{width:794px;background:#fff}</style></head><body><div id="cv">${el.innerHTML}</div></body></html>`], { type: 'text/html' })
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${cv.personal.name || 'CV'}.html`; a.click()
   }
 
-  // ─── Section Content ───────────────────────────────────────────────────────
+  // ── Render section ──
   const renderSection = () => {
+    // ── TEMPLATE ──
     if (section === 'template') return (
       <div>
-        <SectionHeader title="PILIH TEMPLATE" desc="Template menentukan tampilan dan peluang lolos ATS (Applicant Tracking System)" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-px" style={{ border: '1px solid var(--hairline)' }}>
+        <SH title={t.selectTemplate} desc={opt.cvLang === 'id' ? 'Template menentukan tampilan dan peluang lolos ATS.' : 'Template determines appearance and ATS pass rate.'} />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-px mb-6" style={{ border: '1px solid var(--hairline)' }}>
           {TEMPLATES.map(tmpl => {
             const isActive = template.id === tmpl.id
-            const p = tmpl.preview
+            const a = tmpl.accent
             return (
-              <button key={tmpl.id} onClick={() => setTemplate(tmpl)} className="text-left transition-all"
-                style={{ background: isActive ? 'var(--surface-elevated)' : 'var(--surface-card)', borderRight: '1px solid var(--hairline)', borderBottom: '1px solid var(--hairline)', borderLeft: isActive ? `3px solid ${tmpl.badgeColor}` : '3px solid transparent', padding: '16px 20px', cursor: 'pointer' }}
+              <button key={tmpl.id} onClick={() => { setTemplate(tmpl); setOp('accentColor', tmpl.accent) }}
+                className="text-left p-4 transition-all"
+                style={{ background: isActive ? 'var(--surface-elevated)' : 'var(--surface-card)', borderRight: '1px solid var(--hairline)', borderBottom: '1px solid var(--hairline)', borderTop: isActive ? `3px solid ${a}` : '3px solid transparent', cursor: 'pointer' }}
                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--surface-elevated)' }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'var(--surface-card)' }}>
                 {/* Mini preview */}
-                <div style={{ width: '100%', height: 72, background: p.bg, border: '1px solid #e0e0e0', marginBottom: 12, overflow: 'hidden', position: 'relative' }}>
-                  <div style={{ position: 'absolute', inset: 0, padding: 8 }}>
-                    <div style={{ height: 3, background: p.accent, marginBottom: 4, width: tmpl.id === 'creative' ? '30%' : '100%' }} />
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      {tmpl.id === 'creative' && <div style={{ width: '28%', background: '#1a1a1a', height: 54 }} />}
-                      <div style={{ flex: 1 }}>
-                        <div style={{ height: 8, background: p.accent, width: '60%', marginBottom: 4, opacity: 0.8 }} />
-                        <div style={{ height: 4, background: p.secondary, width: '40%', marginBottom: 6, opacity: 0.5 }} />
-                        <div style={{ height: 2, background: '#e0e0e0', width: '90%', marginBottom: 3 }} />
-                        <div style={{ height: 2, background: '#e0e0e0', width: '75%', marginBottom: 3 }} />
-                        <div style={{ height: 2, background: '#e0e0e0', width: '80%' }} />
+                <div style={{ width: '100%', height: 60, background: '#fff', border: '1px solid #ddd', marginBottom: 10, overflow: 'hidden', position: 'relative' }}>
+                  {tmpl.id === 'creative' ? (
+                    <div style={{ display: 'flex', height: '100%' }}>
+                      <div style={{ width: '28%', background: '#111' }} />
+                      <div style={{ flex: 1, padding: 7 }}>
+                        <div style={{ height: 5, background: a, width: '65%', marginBottom: 4 }} />
+                        <div style={{ height: 2.5, background: '#e0e0e0', width: '85%', marginBottom: 2.5 }} />
+                        <div style={{ height: 2.5, background: '#e0e0e0', width: '70%', marginBottom: 2.5 }} />
+                        <div style={{ height: 2.5, background: '#e0e0e0', width: '80%' }} />
                       </div>
                     </div>
-                  </div>
+                  ) : tmpl.id === 'modern' ? (
+                    <div>
+                      <div style={{ background: a, height: 22, padding: '4px 8px' }}><div style={{ height: 4, background: 'rgba(255,255,255,0.8)', width: '50%' }} /></div>
+                      <div style={{ padding: 7 }}>
+                        <div style={{ height: 2.5, background: '#e0e0e0', width: '85%', marginBottom: 2.5 }} />
+                        <div style={{ height: 2.5, background: '#e0e0e0', width: '70%' }} />
+                      </div>
+                    </div>
+                  ) : tmpl.id === 'executive' ? (
+                    <div>
+                      <div style={{ background: '#111', height: 26, padding: '5px 10px' }}>
+                        <div style={{ height: 2, background: a, width: '100%', marginBottom: 4 }} />
+                        <div style={{ height: 4, background: a, width: '50%', opacity: 0.9 }} />
+                      </div>
+                      <div style={{ padding: 7 }}><div style={{ height: 2.5, background: '#e0e0e0', width: '85%', marginBottom: 2.5 }} /><div style={{ height: 2.5, background: '#e0e0e0', width: '70%' }} /></div>
+                    </div>
+                  ) : tmpl.id === 'minimal' ? (
+                    <div style={{ background: '#fafafa', padding: 9 }}>
+                      <div style={{ height: 5, background: '#222', width: '55%', marginBottom: 4, fontWeight: 300 }} />
+                      <div style={{ width: 20, height: 1.5, background: a, marginBottom: 6 }} />
+                      <div style={{ height: 2, background: '#ddd', width: '85%', marginBottom: 2.5 }} />
+                      <div style={{ height: 2, background: '#ddd', width: '70%' }} />
+                    </div>
+                  ) : tmpl.id === 'classic' ? (
+                    <div style={{ padding: 9, textAlign: 'center' as const }}>
+                      <div style={{ height: 2, background: a, marginBottom: 6 }} />
+                      <div style={{ height: 6, background: '#111', width: '55%', margin: '0 auto 5px' }} />
+                      <div style={{ height: 2, background: a, marginBottom: 5 }} />
+                      <div style={{ height: 2, background: '#ddd', width: '85%', margin: '0 auto 2.5px' }} />
+                      <div style={{ height: 2, background: '#ddd', width: '70%', margin: '0 auto' }} />
+                    </div>
+                  ) : (
+                    <div style={{ padding: 9 }}>
+                      <div style={{ height: 2, background: a, width: '100%', marginBottom: 6 }} />
+                      <div style={{ height: 6, background: a, width: '55%', marginBottom: 4, opacity: 0.85 }} />
+                      <div style={{ height: 2, background: '#ddd', width: '85%', marginBottom: 2.5 }} />
+                      <div style={{ height: 2, background: '#ddd', width: '70%' }} />
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)', margin: '0 0 3px' }}>{tmpl.name}</p>
-                    <p style={{ fontSize: 11, fontWeight: 300, color: 'var(--muted)', lineHeight: 1.5, margin: 0 }}>{tmpl.desc}</p>
-                  </div>
-                  <span style={{ fontSize: 8, fontWeight: 700, padding: '2px 7px', background: tmpl.badgeColor, color: '#fff', letterSpacing: '0.5px', flexShrink: 0, marginLeft: 8 }}>{tmpl.badge}</span>
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink)', margin: 0 }}>{tmpl.name}</p>
+                  <span style={{ fontSize: 8, fontWeight: 700, padding: '2px 6px', background: tmpl.badgeColor, color: '#fff', flexShrink: 0 }}>{tmpl.badge}</span>
                 </div>
-                <div className="flex items-center gap-3 mt-2">
-                  <div style={{ height: 2, flex: 1, background: 'var(--surface-elevated)' }}>
-                    <div style={{ height: 2, background: tmpl.badgeColor, width: `${tmpl.atsScore}%` }} />
-                  </div>
+                <p style={{ fontSize: 10, fontWeight: 300, color: 'var(--muted)', lineHeight: 1.5, margin: '0 0 7px' }}>{tmpl.desc[opt.cvLang]}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ height: 2, flex: 1, background: 'var(--surface-elevated)' }}><div style={{ height: 2, background: tmpl.badgeColor, width: `${tmpl.atsScore}%` }} /></div>
                   <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)' }}>ATS {tmpl.atsScore}%</span>
                 </div>
-                {isActive && <div className="flex items-center gap-2 mt-2" style={{ fontSize: 10, fontWeight: 700, color: tmpl.badgeColor, letterSpacing: '1px' }}><Check size={11} /> DIPILIH</div>}
+                {isActive && <p style={{ fontSize: 10, fontWeight: 700, color: a, marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}><Check size={11} /> {t.selected}</p>}
               </button>
             )
           })}
         </div>
+
+        {/* CV Options */}
+        <div style={{ background: 'var(--surface-card)', border: '1px solid var(--hairline)', padding: 20 }}>
+          <div className="flex items-center gap-2 mb-5">
+            <Settings2 size={13} style={{ color: 'var(--muted)' }} />
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase' }}>{t.cvOptions}</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Language */}
+            <div>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>{t.cvLangLabel}</p>
+              <div className="flex gap-2">
+                {(['id', 'en'] as CVLang[]).map(l => (
+                  <button key={l} onClick={() => setOp('cvLang', l)}
+                    style={{ flex: 1, height: 38, background: opt.cvLang === l ? 'var(--m-blue-dark)' : 'var(--surface-elevated)', border: `1px solid ${opt.cvLang === l ? 'var(--m-blue-dark)' : 'var(--hairline)'}`, color: opt.cvLang === l ? '#fff' : 'var(--muted)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    {l === 'id' ? '🇮🇩 Indonesia' : '🇬🇧 English'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Icons toggle */}
+            <div>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>{t.iconsLabel}</p>
+              <div className="flex gap-2">
+                {[true, false].map(val => (
+                  <button key={String(val)} onClick={() => setOp('useIcons', val)}
+                    style={{ flex: 1, height: 38, background: opt.useIcons === val ? 'var(--m-blue-dark)' : 'var(--surface-elevated)', border: `1px solid ${opt.useIcons === val ? 'var(--m-blue-dark)' : 'var(--hairline)'}`, color: opt.useIcons === val ? '#fff' : 'var(--muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                    {val ? t.withIcons : t.noIcons}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Accent color */}
+            <div>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>{t.accentLabel}</p>
+              <div className="flex flex-wrap gap-2">
+                {ACCENT_COLORS.map(c => (
+                  <button key={c.value} onClick={() => setOp('accentColor', c.value)} title={c.label}
+                    style={{ width: 30, height: 30, background: c.value, border: opt.accentColor === c.value ? '3px solid var(--ink)' : '2px solid transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {opt.accentColor === c.value && <Check size={13} color="#fff" strokeWidth={3} />}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Font size */}
+            <div>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>{t.fontSizeLabel}</p>
+              <div className="flex gap-2">
+                {(['small', 'normal', 'large'] as const).map(sz => (
+                  <button key={sz} onClick={() => setOp('fontSize', sz)}
+                    style={{ flex: 1, height: 38, background: opt.fontSize === sz ? 'var(--m-blue-dark)' : 'var(--surface-elevated)', border: `1px solid ${opt.fontSize === sz ? 'var(--m-blue-dark)' : 'var(--hairline)'}`, color: opt.fontSize === sz ? '#fff' : 'var(--muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>
+                    {sz === 'small' ? t.small : sz === 'normal' ? t.normal : t.large}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     )
 
+    // ── PERSONAL ──
     if (section === 'personal') return (
       <div>
-        <SectionHeader title="DATA DIRI" desc="Informasi kontak yang tampil di bagian atas CV" />
+        <SH title={t.sectionLabels.personal.toUpperCase()} desc={opt.cvLang === 'id' ? 'Informasi kontak yang tampil di bagian atas CV.' : 'Contact information displayed at the top of your CV.'} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-          <Field label="Nama Lengkap" value={cv.personal.name} onChange={v => updatePersonal('name', v)} placeholder="Budi Santoso" required />
-          <Field label="Jabatan / Posisi" value={cv.personal.title} onChange={v => updatePersonal('title', v)} placeholder="Senior Software Engineer" required />
-          <Field label="Email" value={cv.personal.email} onChange={v => updatePersonal('email', v)} placeholder="budi@email.com" type="email" required />
-          <Field label="Nomor Telepon" value={cv.personal.phone} onChange={v => updatePersonal('phone', v)} placeholder="+62 812 3456 7890" required />
-          <Field label="Lokasi / Kota" value={cv.personal.location} onChange={v => updatePersonal('location', v)} placeholder="Jakarta, Indonesia" />
-          <Field label="LinkedIn" value={cv.personal.linkedin} onChange={v => updatePersonal('linkedin', v)} placeholder="linkedin.com/in/budisantoso" />
-          <Field label="GitHub" value={cv.personal.github} onChange={v => updatePersonal('github', v)} placeholder="github.com/budisantoso" />
-          <Field label="Website / Portfolio" value={cv.personal.website} onChange={v => updatePersonal('website', v)} placeholder="budisantoso.dev" />
+          <Field label={opt.cvLang === 'id' ? 'Nama Lengkap' : 'Full Name'} value={cv.personal.name} onChange={v => upP('name', v)} placeholder="Budi Santoso" required />
+          <Field label={opt.cvLang === 'id' ? 'Jabatan / Posisi' : 'Job Title'} value={cv.personal.title} onChange={v => upP('title', v)} placeholder="Senior Software Engineer" required />
+          <Field label="Email" value={cv.personal.email} onChange={v => upP('email', v)} placeholder="budi@email.com" type="email" required />
+          <Field label={opt.cvLang === 'id' ? 'Nomor Telepon' : 'Phone Number'} value={cv.personal.phone} onChange={v => upP('phone', v)} placeholder="+62 812 3456 7890" required />
+          <Field label={opt.cvLang === 'id' ? 'Lokasi / Kota' : 'Location / City'} value={cv.personal.location} onChange={v => upP('location', v)} placeholder="Jakarta, Indonesia" />
+          <Field label="LinkedIn" value={cv.personal.linkedin} onChange={v => upP('linkedin', v)} placeholder="linkedin.com/in/username" />
+          <Field label="GitHub" value={cv.personal.github} onChange={v => upP('github', v)} placeholder="github.com/username" />
+          <Field label={opt.cvLang === 'id' ? 'Website / Portfolio' : 'Website / Portfolio'} value={cv.personal.website} onChange={v => upP('website', v)} placeholder="portfolio.dev" />
         </div>
         <div style={{ marginBottom: 16 }}>
           <div className="flex items-center justify-between mb-2">
-            <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)' }}>RINGKASAN PROFESIONAL</label>
-            <button onClick={aiEnhanceSummary} disabled={!!aiLoading} className="flex items-center gap-1.5"
-              style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', color: aiLoading === 'summary' ? 'var(--muted)' : 'var(--m-blue-light)', textTransform: 'uppercase', background: 'none', border: '1px solid var(--hairline)', padding: '4px 10px', cursor: 'pointer' }}>
-              {aiLoading === 'summary' ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
-              AI ENHANCE
+            <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)' }}>{t.headings.summary}</label>
+            <button onClick={aiSummary} disabled={!!aiLoading} className="flex items-center gap-1.5"
+              style={{ fontSize: 10, fontWeight: 700, color: aiLoading === 'summary' ? 'var(--muted)' : 'var(--m-blue-light)', textTransform: 'uppercase', background: 'none', border: '1px solid var(--hairline)', padding: '4px 10px', cursor: 'pointer' }}>
+              {aiLoading === 'summary' ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />} {t.aiEnhance}
             </button>
           </div>
-          <textarea value={cv.personal.summary} onChange={e => updatePersonal('summary', e.target.value)}
-            placeholder="Profesional berpengalaman dengan 5+ tahun di bidang pengembangan software. Spesialisasi dalam..." rows={4}
-            className="input-base" style={{ height: 'auto', resize: 'vertical', fontSize: 13, lineHeight: 1.6 }} />
-          <p style={{ fontSize: 10, color: 'var(--muted)', marginTop: 4 }}>{cv.personal.summary.length}/500 karakter · Rekomendasikan 150–300 karakter</p>
+          <textarea value={cv.personal.summary} onChange={e => upP('summary', e.target.value)}
+            placeholder={opt.cvLang === 'id' ? 'Profesional berpengalaman dengan 5+ tahun di bidang...' : 'Experienced professional with 5+ years in...'}
+            rows={4} className="input-base" style={{ height: 'auto', resize: 'vertical', fontSize: 13, lineHeight: 1.6 }} />
+          <p style={{ fontSize: 10, color: 'var(--muted)', marginTop: 4 }}>{cv.personal.summary.length} {opt.cvLang === 'id' ? 'karakter · Rekomendasi 150–300' : 'chars · Recommended 150–300'}</p>
         </div>
-        <ATSScore cv={cv} template={template} />
+        <ATSScorePanel cv={cv} template={template} t={t} />
       </div>
     )
 
+    // ── EXPERIENCE ──
     if (section === 'experience') return (
       <div>
-        <SectionHeader title="PENGALAMAN KERJA" desc="Urutkan dari yang terbaru. Gunakan action verbs dan metrik kuantitatif untuk hasil terbaik." />
+        <SH title={t.sectionLabels.experience.toUpperCase()} desc={opt.cvLang === 'id' ? 'Urutkan dari yang terbaru. Gunakan action verbs dan metrik kuantitatif.' : 'Order from most recent. Use action verbs and quantifiable metrics.'} />
         {cv.experience.map((exp, idx) => (
-          <ExpCard key={exp.id} exp={exp} idx={idx} total={cv.experience.length}
-            onChange={updated => setCV(p => ({ ...p, experience: p.experience.map(e => e.id === exp.id ? updated : e) }))}
-            onDelete={() => setCV(p => ({ ...p, experience: p.experience.filter(e => e.id !== exp.id) }))}
-            onMove={(dir) => {
-              setCV(p => {
-                const arr = [...p.experience]
-                const newIdx = dir === 'up' ? idx - 1 : idx + 1
-                ;[arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]]
-                return { ...p, experience: arr }
-              })
-            }}
-            onAIEnhance={() => aiEnhanceExp(exp.id)}
-            aiLoading={aiLoading === 'exp-' + exp.id}
-          />
+          <div key={exp.id} style={{ background: 'var(--surface-soft)', border: '1px solid var(--hairline)', marginBottom: 12 }}>
+            <div className="flex items-center justify-between p-3" style={{ borderBottom: '1px solid var(--hairline)' }}>
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)', margin: 0 }}>{exp.role || (opt.cvLang === 'id' ? `Pengalaman ${idx+1}` : `Experience ${idx+1}`)}</p>
+                {exp.company && <p style={{ fontSize: 11, color: 'var(--muted)', margin: '1px 0 0' }}>{exp.company}</p>}
+              </div>
+              <div className="flex items-center gap-1">
+                {idx > 0 && <button onClick={() => setCV(p => { const a=[...p.experience]; [a[idx],a[idx-1]]=[a[idx-1],a[idx]]; return {...p,experience:a} })} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--muted)',padding:3 }}><MoveUp size={12}/></button>}
+                {idx < cv.experience.length-1 && <button onClick={() => setCV(p => { const a=[...p.experience]; [a[idx],a[idx+1]]=[a[idx+1],a[idx]]; return {...p,experience:a} })} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--muted)',padding:3 }}><MoveDown size={12}/></button>}
+                <button onClick={() => setCV(p => ({...p,experience:p.experience.filter(e=>e.id!==exp.id)}))} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--m-red)',padding:3 }}><Trash2 size={13}/></button>
+              </div>
+            </div>
+            <div style={{ padding: '14px 14px 10px' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5">
+                <Field label={opt.cvLang==='id'?'Jabatan':'Job Title'} value={exp.role} onChange={v=>setCV(p=>({...p,experience:p.experience.map(e=>e.id===exp.id?{...e,role:v}:e)}))} placeholder="Software Engineer" required />
+                <Field label={opt.cvLang==='id'?'Perusahaan':'Company'} value={exp.company} onChange={v=>setCV(p=>({...p,experience:p.experience.map(e=>e.id===exp.id?{...e,company:v}:e)}))} placeholder="PT Teknologi Maju" required />
+                <Field label={opt.cvLang==='id'?'Tanggal Mulai':'Start Date'} value={exp.startDate} onChange={v=>setCV(p=>({...p,experience:p.experience.map(e=>e.id===exp.id?{...e,startDate:v}:e)}))} placeholder="Jan 2022" />
+                <Field label={opt.cvLang==='id'?'Tanggal Selesai':'End Date'} value={exp.endDate} onChange={v=>setCV(p=>({...p,experience:p.experience.map(e=>e.id===exp.id?{...e,endDate:v}:e)}))} placeholder="Des 2024" />
+                <Field label={opt.cvLang==='id'?'Lokasi':'Location'} value={exp.location} onChange={v=>setCV(p=>({...p,experience:p.experience.map(e=>e.id===exp.id?{...e,location:v}:e)}))} placeholder="Jakarta / Remote" />
+              </div>
+              <div className="flex items-center gap-2 mb-3" style={{ marginTop:-8 }}>
+                <input type="checkbox" checked={exp.current} onChange={e=>setCV(p=>({...p,experience:p.experience.map(ex=>ex.id===exp.id?{...ex,current:e.target.checked}:ex)}))} style={{ accentColor:'var(--m-blue-dark)' }} />
+                <label style={{ fontSize:12,color:'var(--body)',cursor:'pointer' }}>{t.stillWorking}</label>
+              </div>
+              <div style={{ marginBottom:12 }}>
+                <div className="flex items-center justify-between mb-2">
+                  <label style={{ fontSize:10,fontWeight:700,letterSpacing:'1.5px',textTransform:'uppercase',color:'var(--muted)' }}>{opt.cvLang==='id'?'DESKRIPSI':'DESCRIPTION'}</label>
+                  <button onClick={()=>aiExp(exp.id)} disabled={!!aiLoading} style={{ fontSize:9,fontWeight:700,color:aiLoading==='exp-'+exp.id?'var(--muted)':'var(--m-blue-light)',textTransform:'uppercase',background:'none',border:'1px solid var(--hairline)',padding:'3px 8px',cursor:'pointer',display:'flex',alignItems:'center',gap:5 }}>
+                    {aiLoading==='exp-'+exp.id?<Loader2 size={10} className="animate-spin"/>:<Sparkles size={10}/>} {t.aiEnhance}
+                  </button>
+                </div>
+                <textarea value={exp.description} onChange={e=>setCV(p=>({...p,experience:p.experience.map(ex=>ex.id===exp.id?{...ex,description:e.target.value}:ex)}))}
+                  placeholder={opt.cvLang==='id'?'Tanggung jawab dan pencapaian utama...':'Key responsibilities and achievements...'}
+                  rows={3} className="input-base" style={{ height:'auto',resize:'vertical',fontSize:13,lineHeight:1.6 }} />
+              </div>
+              <div>
+                <label style={{ fontSize:10,fontWeight:700,letterSpacing:'1.5px',textTransform:'uppercase',color:'var(--muted)',display:'block',marginBottom:7 }}>{t.headings.achievements}</label>
+                {exp.achievements.map((ach,ai) => (
+                  <div key={ai} className="flex items-center gap-2 mb-2">
+                    <span style={{ fontSize:12,color:'var(--m-blue-light)',flexShrink:0 }}>›</span>
+                    <input value={ach} onChange={e=>{const arr=[...exp.achievements];arr[ai]=e.target.value;setCV(p=>({...p,experience:p.experience.map(ex=>ex.id===exp.id?{...ex,achievements:arr}:ex)}))}}
+                      placeholder={opt.cvLang==='id'?'Meningkatkan performa 40% dengan optimasi database...':'Improved performance by 40% through database optimization...'}
+                      className="input-base" style={{ height:38,fontSize:12,flex:1 }} />
+                    <button onClick={()=>{const arr=exp.achievements.filter((_,i)=>i!==ai);setCV(p=>({...p,experience:p.experience.map(ex=>ex.id===exp.id?{...ex,achievements:arr}:ex)}))}} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--muted)',flexShrink:0 }}><Trash2 size={12}/></button>
+                  </div>
+                ))}
+                <button onClick={()=>setCV(p=>({...p,experience:p.experience.map(e=>e.id===exp.id?{...e,achievements:[...e.achievements,'']}:e)}))} style={{ fontSize:10,fontWeight:700,color:'var(--m-blue-light)',letterSpacing:'1px',textTransform:'uppercase',background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:5 }}>
+                  <Plus size={11}/> {t.addBullet}
+                </button>
+              </div>
+            </div>
+          </div>
         ))}
-        <button onClick={() => setCV(p => ({ ...p, experience: [...p.experience, { id: uid(), company: '', role: '', startDate: '', endDate: '', current: false, location: '', description: '', achievements: [''] }] }))}
-          className="flex items-center gap-2" style={{ width: '100%', height: 44, background: 'var(--surface-card)', border: '1px dashed var(--hairline)', color: 'var(--muted)', fontSize: 12, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', cursor: 'pointer', justifyContent: 'center' }}>
-          <Plus size={14} /> TAMBAH PENGALAMAN
-        </button>
+        <AddBtn label={t.addExp} onClick={()=>setCV(p=>({...p,experience:[...p.experience,{id:uid(),company:'',role:'',startDate:'',endDate:'',current:false,location:'',description:'',achievements:['']}]}))} />
       </div>
     )
 
+    // ── EDUCATION ──
     if (section === 'education') return (
       <div>
-        <SectionHeader title="PENDIDIKAN" desc="Cantumkan pendidikan formal dari yang terbaru. IPK ≥ 3.0 direkomendasikan untuk dicantumkan." />
-        {cv.education.map((edu, idx) => (
-          <EduCard key={edu.id} edu={edu} idx={idx} total={cv.education.length}
-            onChange={updated => setCV(p => ({ ...p, education: p.education.map(e => e.id === edu.id ? updated : e) }))}
-            onDelete={() => setCV(p => ({ ...p, education: p.education.filter(e => e.id !== edu.id) }))}
-          />
+        <SH title={t.sectionLabels.education.toUpperCase()} desc={opt.cvLang==='id'?'Cantumkan pendidikan formal dari yang terbaru.':'List formal education from most recent.'} />
+        {cv.education.map((edu,idx) => (
+          <div key={edu.id} style={{ background:'var(--surface-soft)',border:'1px solid var(--hairline)',marginBottom:12,padding:14 }}>
+            <div className="flex justify-between items-start mb-3">
+              <p style={{ fontSize:12,fontWeight:700,color:'var(--ink)',margin:0 }}>{edu.degree||(opt.cvLang==='id'?`Pendidikan ${idx+1}`:`Education ${idx+1}`)}</p>
+              <button onClick={()=>setCV(p=>({...p,education:p.education.filter(e=>e.id!==edu.id)}))} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--m-red)' }}><Trash2 size={13}/></button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5">
+              <Field label={opt.cvLang==='id'?'Nama Institusi':'Institution'} value={edu.institution} onChange={v=>setCV(p=>({...p,education:p.education.map(e=>e.id===edu.id?{...e,institution:v}:e)}))} placeholder="Universitas Indonesia" required />
+              <Field label={opt.cvLang==='id'?'Gelar':'Degree'} value={edu.degree} onChange={v=>setCV(p=>({...p,education:p.education.map(e=>e.id===edu.id?{...e,degree:v}:e)}))} placeholder="S1 / Bachelor" required />
+              <Field label={opt.cvLang==='id'?'Jurusan':'Field of Study'} value={edu.field} onChange={v=>setCV(p=>({...p,education:p.education.map(e=>e.id===edu.id?{...e,field:v}:e)}))} placeholder="Teknik Informatika" />
+              <Field label={opt.cvLang==='id'?'IPK':'GPA'} value={edu.gpa} onChange={v=>setCV(p=>({...p,education:p.education.map(e=>e.id===edu.id?{...e,gpa:v}:e)}))} placeholder="3.75" />
+              <Field label={opt.cvLang==='id'?'Tahun Mulai':'Start Year'} value={edu.startDate} onChange={v=>setCV(p=>({...p,education:p.education.map(e=>e.id===edu.id?{...e,startDate:v}:e)}))} placeholder="2019" />
+              <Field label={opt.cvLang==='id'?'Tahun Lulus':'Graduation Year'} value={edu.endDate} onChange={v=>setCV(p=>({...p,education:p.education.map(e=>e.id===edu.id?{...e,endDate:v}:e)}))} placeholder="2023" />
+              <Field label={opt.cvLang==='id'?'Penghargaan':'Honors/Awards'} value={edu.honors} onChange={v=>setCV(p=>({...p,education:p.education.map(e=>e.id===edu.id?{...e,honors:v}:e)}))} placeholder="Cumlaude / Dean's List" />
+            </div>
+            <div className="flex items-center gap-2" style={{ marginTop:-8 }}>
+              <input type="checkbox" checked={edu.current} onChange={e=>setCV(p=>({...p,education:p.education.map(ed=>ed.id===edu.id?{...ed,current:e.target.checked}:ed)}))} style={{ accentColor:'var(--m-blue-dark)' }} />
+              <label style={{ fontSize:12,color:'var(--body)',cursor:'pointer' }}>{t.stillStudying}</label>
+            </div>
+          </div>
         ))}
-        <button onClick={() => setCV(p => ({ ...p, education: [...p.education, { id: uid(), institution: '', degree: '', field: '', startDate: '', endDate: '', current: false, gpa: '', honors: '' }] }))}
-          className="flex items-center gap-2" style={{ width: '100%', height: 44, background: 'var(--surface-card)', border: '1px dashed var(--hairline)', color: 'var(--muted)', fontSize: 12, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', cursor: 'pointer', justifyContent: 'center' }}>
-          <Plus size={14} /> TAMBAH PENDIDIKAN
-        </button>
+        <AddBtn label={t.addEdu} onClick={()=>setCV(p=>({...p,education:[...p.education,{id:uid(),institution:'',degree:'',field:'',startDate:'',endDate:'',current:false,gpa:'',honors:''}]}))} />
       </div>
     )
 
+    // ── SKILLS ──
     if (section === 'skills') return (
       <div>
-        <SectionHeader title="KEAHLIAN" desc="Kelompokkan skill berdasarkan kategori. Sesuaikan dengan job description yang dituju." />
+        <SH title={t.sectionLabels.skills.toUpperCase()} desc={opt.cvLang==='id'?'Kelompokkan skill per kategori. Sesuaikan dengan job description.':'Group skills by category. Match with the job description.'} />
         <div className="flex justify-end mb-4">
-          <button onClick={aiSuggestSkills} disabled={!!aiLoading} className="flex items-center gap-2"
-            style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1px', color: aiLoading === 'skills' ? 'var(--muted)' : 'var(--m-blue-light)', textTransform: 'uppercase', background: 'none', border: '1px solid rgba(0,102,177,0.3)', padding: '7px 14px', cursor: 'pointer' }}>
-            {aiLoading === 'skills' ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-            AI SUGGEST SKILLS
+          <button onClick={aiSkills} disabled={!!aiLoading} className="flex items-center gap-2" style={{ fontSize:11,fontWeight:700,color:aiLoading==='skills'?'var(--muted)':'var(--m-blue-light)',textTransform:'uppercase',background:'none',border:'1px solid rgba(0,102,177,0.3)',padding:'7px 14px',cursor:'pointer' }}>
+            {aiLoading==='skills'?<Loader2 size={12} className="animate-spin"/>:<Sparkles size={12}/>} {t.aiSuggest}
           </button>
         </div>
-        {cv.skills.map((sg) => (
-          <SkillCard key={sg.id} sg={sg}
-            onChange={updated => setCV(p => ({ ...p, skills: p.skills.map(s => s.id === sg.id ? updated : s) }))}
-            onDelete={() => setCV(p => ({ ...p, skills: p.skills.filter(s => s.id !== sg.id) }))}
-          />
+        {cv.skills.map(sg => (
+          <div key={sg.id} style={{ background:'var(--surface-soft)',border:'1px solid var(--hairline)',padding:14,marginBottom:12 }}>
+            <div className="flex items-start gap-3 mb-3">
+              <input value={sg.category} onChange={e=>setCV(p=>({...p,skills:p.skills.map(s=>s.id===sg.id?{...s,category:e.target.value}:s)}))}
+                placeholder={opt.cvLang==='id'?'Kategori (cth: Programming Languages)':'Category (e.g. Programming Languages)'}
+                className="input-base" style={{ height:38,fontSize:12,flex:1 }} />
+              <button onClick={()=>setCV(p=>({...p,skills:p.skills.filter(s=>s.id!==sg.id)}))} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--m-red)',padding:4,flexShrink:0 }}><Trash2 size={13}/></button>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {sg.items.map((item,i) => (
+                <span key={i} className="flex items-center gap-1" style={{ background:'var(--surface-elevated)',border:'1px solid var(--hairline)',padding:'3px 10px',fontSize:11,color:'var(--body)' }}>
+                  {item}
+                  <button onClick={()=>setCV(p=>({...p,skills:p.skills.map(s=>s.id===sg.id?{...s,items:s.items.filter((_,idx)=>idx!==i)}:s)}))} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--muted)',padding:'0 0 0 4px' }}>✕</button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input value={skillInput[sg.id]||''} onChange={e=>setSkillInput(p=>({...p,[sg.id]:e.target.value}))}
+                onKeyDown={e=>{if((e.key==='Enter'||e.key===',')&&(skillInput[sg.id]||'').trim()){setCV(p=>({...p,skills:p.skills.map(s=>s.id===sg.id?{...s,items:[...s.items,(skillInput[sg.id]||'').trim()]}:s)}));setSkillInput(p=>({...p,[sg.id]:''}));e.preventDefault()}}}
+                placeholder={opt.cvLang==='id'?'Ketik skill lalu Enter...':'Type skill then Enter...'}
+                className="input-base" style={{ height:36,fontSize:12,flex:1 }} />
+              <button onClick={()=>{const v=(skillInput[sg.id]||'').trim();if(v){setCV(p=>({...p,skills:p.skills.map(s=>s.id===sg.id?{...s,items:[...s.items,v]}:s)}));setSkillInput(p=>({...p,[sg.id]:''}));}}} style={{ height:36,padding:'0 14px',background:'var(--m-blue-dark)',border:'none',color:'#fff',fontSize:11,fontWeight:700,cursor:'pointer' }}><Plus size={13}/></button>
+            </div>
+          </div>
         ))}
-        <button onClick={() => setCV(p => ({ ...p, skills: [...p.skills, { id: uid(), category: '', items: [] }] }))}
-          className="flex items-center gap-2" style={{ width: '100%', height: 44, background: 'var(--surface-card)', border: '1px dashed var(--hairline)', color: 'var(--muted)', fontSize: 12, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', cursor: 'pointer', justifyContent: 'center' }}>
-          <Plus size={14} /> TAMBAH KELOMPOK SKILL
-        </button>
+        <AddBtn label={t.addSkill} onClick={()=>setCV(p=>({...p,skills:[...p.skills,{id:uid(),category:'',items:[]}]}))} />
       </div>
     )
 
+    // ── PROJECTS ──
     if (section === 'projects') return (
       <div>
-        <SectionHeader title="PROYEK" desc="Cantumkan proyek yang relevan dengan posisi yang dilamar. Sertakan link dan teknologi yang digunakan." />
+        <SH title={t.sectionLabels.projects.toUpperCase()} desc={opt.cvLang==='id'?'Cantumkan proyek yang relevan dengan posisi yang dilamar.':'List projects relevant to the position you are applying for.'} />
         {cv.projects.map(proj => (
-          <ProjectCard key={proj.id} proj={proj}
-            onChange={updated => setCV(p => ({ ...p, projects: p.projects.map(pr => pr.id === proj.id ? updated : pr) }))}
-            onDelete={() => setCV(p => ({ ...p, projects: p.projects.filter(pr => pr.id !== proj.id) }))}
-          />
+          <div key={proj.id} style={{ background:'var(--surface-soft)',border:'1px solid var(--hairline)',marginBottom:12,padding:14 }}>
+            <div className="flex justify-between items-start mb-3">
+              <p style={{ fontSize:12,fontWeight:700,color:'var(--ink)',margin:0 }}>{proj.name||(opt.cvLang==='id'?'Proyek Baru':'New Project')}</p>
+              <button onClick={()=>setCV(p=>({...p,projects:p.projects.filter(pr=>pr.id!==proj.id)}))} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--m-red)' }}><Trash2 size={13}/></button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5">
+              <Field label={opt.cvLang==='id'?'Nama Proyek':'Project Name'} value={proj.name} onChange={v=>setCV(p=>({...p,projects:p.projects.map(pr=>pr.id===proj.id?{...pr,name:v}:pr)}))} required />
+              <Field label={opt.cvLang==='id'?'Teknologi':'Tech Stack'} value={proj.tech} onChange={v=>setCV(p=>({...p,projects:p.projects.map(pr=>pr.id===proj.id?{...pr,tech:v}:pr)}))} placeholder="Next.js, Node.js, PostgreSQL" />
+              <Field label="URL / Link" value={proj.url} onChange={v=>setCV(p=>({...p,projects:p.projects.map(pr=>pr.id===proj.id?{...pr,url:v}:pr)}))} placeholder="github.com/user/project" />
+              <Field label={opt.cvLang==='id'?'Periode':'Period'} value={proj.startDate} onChange={v=>setCV(p=>({...p,projects:p.projects.map(pr=>pr.id===proj.id?{...pr,startDate:v}:pr)}))} placeholder="Jan 2024 – Mar 2024" />
+            </div>
+            <div>
+              <label style={{ display:'block',fontSize:10,fontWeight:700,letterSpacing:'1.5px',textTransform:'uppercase',color:'var(--muted)',marginBottom:5 }}>{opt.cvLang==='id'?'DESKRIPSI':'DESCRIPTION'}</label>
+              <textarea value={proj.description} onChange={e=>setCV(p=>({...p,projects:p.projects.map(pr=>pr.id===proj.id?{...pr,description:e.target.value}:pr)}))}
+                placeholder={opt.cvLang==='id'?'Konteks, peran, dan hasil yang dicapai...':'Context, your role, and outcomes achieved...'}
+                rows={3} className="input-base" style={{ height:'auto',resize:'vertical',fontSize:13,lineHeight:1.6 }} />
+            </div>
+          </div>
         ))}
-        <button onClick={() => setCV(p => ({ ...p, projects: [...p.projects, { id: uid(), name: '', description: '', tech: '', url: '', startDate: '', endDate: '' }] }))}
-          className="flex items-center gap-2" style={{ width: '100%', height: 44, background: 'var(--surface-card)', border: '1px dashed var(--hairline)', color: 'var(--muted)', fontSize: 12, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', cursor: 'pointer', justifyContent: 'center' }}>
-          <Plus size={14} /> TAMBAH PROYEK
-        </button>
+        <AddBtn label={t.addProject} onClick={()=>setCV(p=>({...p,projects:[...p.projects,{id:uid(),name:'',description:'',tech:'',url:'',startDate:'',endDate:''}]}))} />
       </div>
     )
 
+    // ── CERTIFICATIONS ──
     if (section === 'certifications') return (
       <div>
-        <SectionHeader title="SERTIFIKASI & PENGHARGAAN" desc="Sertifikasi dari platform terkemuka (Google, AWS, Coursera, dll) meningkatkan peluang diterima." />
+        <SH title={t.sectionLabels.certifications.toUpperCase()} desc={opt.cvLang==='id'?'Sertifikasi dari platform terkemuka meningkatkan peluang diterima.':'Certifications from reputable platforms increase your chances.'} />
         {cv.certifications.map(cert => (
-          <CertCard key={cert.id} cert={cert}
-            onChange={updated => setCV(p => ({ ...p, certifications: p.certifications.map(c => c.id === cert.id ? updated : c) }))}
-            onDelete={() => setCV(p => ({ ...p, certifications: p.certifications.filter(c => c.id !== cert.id) }))}
-          />
+          <div key={cert.id} style={{ background:'var(--surface-soft)',border:'1px solid var(--hairline)',padding:14,marginBottom:12 }}>
+            <div className="flex justify-end mb-2"><button onClick={()=>setCV(p=>({...p,certifications:p.certifications.filter(c=>c.id!==cert.id)}))} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--m-red)' }}><Trash2 size={13}/></button></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5">
+              <Field label={opt.cvLang==='id'?'Nama Sertifikasi':'Certification Name'} value={cert.name} onChange={v=>setCV(p=>({...p,certifications:p.certifications.map(c=>c.id===cert.id?{...c,name:v}:c)}))} required />
+              <Field label={opt.cvLang==='id'?'Penerbit':'Issuer'} value={cert.issuer} onChange={v=>setCV(p=>({...p,certifications:p.certifications.map(c=>c.id===cert.id?{...c,issuer:v}:c)}))} placeholder="Amazon Web Services" required />
+              <Field label={opt.cvLang==='id'?'Tanggal':'Date'} value={cert.date} onChange={v=>setCV(p=>({...p,certifications:p.certifications.map(c=>c.id===cert.id?{...c,date:v}:c)}))} placeholder="Nov 2024" />
+              <Field label="Credential ID" value={cert.credentialId} onChange={v=>setCV(p=>({...p,certifications:p.certifications.map(c=>c.id===cert.id?{...c,credentialId:v}:c)}))} placeholder="ABC123XYZ" />
+            </div>
+          </div>
         ))}
-        <button onClick={() => setCV(p => ({ ...p, certifications: [...p.certifications, { id: uid(), name: '', issuer: '', date: '', credentialId: '', url: '' }] }))}
-          className="flex items-center gap-2" style={{ width: '100%', height: 44, background: 'var(--surface-card)', border: '1px dashed var(--hairline)', color: 'var(--muted)', fontSize: 12, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', cursor: 'pointer', justifyContent: 'center' }}>
-          <Plus size={14} /> TAMBAH SERTIFIKASI
-        </button>
+        <AddBtn label={t.addCert} onClick={()=>setCV(p=>({...p,certifications:[...p.certifications,{id:uid(),name:'',issuer:'',date:'',credentialId:'',url:''}]}))} />
       </div>
     )
 
+    // ── LANGUAGES ──
     if (section === 'languages') return (
       <div>
-        <SectionHeader title="BAHASA" desc="Kemampuan bahasa asing (terutama Inggris) sangat nilai di banyak perusahaan." />
+        <SH title={t.sectionLabels.languages.toUpperCase()} desc={opt.cvLang==='id'?'Kemampuan bahasa asing (terutama Inggris) sangat dinilai.':'Foreign language skills (especially English) are highly valued.'} />
         {cv.languages.map(l => (
-          <LangCard key={l.id} lang={l}
-            onChange={updated => setCV(p => ({ ...p, languages: p.languages.map(x => x.id === l.id ? updated : x) }))}
-            onDelete={() => setCV(p => ({ ...p, languages: p.languages.filter(x => x.id !== l.id) }))}
-          />
+          <div key={l.id} style={{ background:'var(--surface-soft)',border:'1px solid var(--hairline)',padding:14,marginBottom:12 }}>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label={opt.cvLang==='id'?'Bahasa':'Language'} value={l.language} onChange={v=>setCV(p=>({...p,languages:p.languages.map(x=>x.id===l.id?{...x,language:v}:x)}))} placeholder={opt.cvLang==='id'?'Bahasa Inggris':'English'} required />
+              <div style={{ marginBottom:14 }}>
+                <label style={{ display:'block',fontSize:10,fontWeight:700,letterSpacing:'1.5px',textTransform:'uppercase',color:'var(--muted)',marginBottom:5 }}>{opt.cvLang==='id'?'TINGKAT':'LEVEL'}</label>
+                <select value={l.level} onChange={e=>setCV(p=>({...p,languages:p.languages.map(x=>x.id===l.id?{...x,level:e.target.value}:x)}))} className="input-base" style={{ height:40,fontSize:13 }}>
+                  <option value="">{t.selectLevel}</option>
+                  <option value="Native / Bahasa Ibu">Native / Bahasa Ibu</option>
+                  <option value="Full Professional Proficiency">Full Professional Proficiency (C2)</option>
+                  <option value="Professional Working Proficiency">Professional Working Proficiency (C1)</option>
+                  <option value="Limited Working Proficiency">Limited Working Proficiency (B2)</option>
+                  <option value="Elementary">Elementary / Dasar (A2)</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end" style={{ marginTop:-8 }}><button onClick={()=>setCV(p=>({...p,languages:p.languages.filter(x=>x.id!==l.id)}))} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--m-red)' }}><Trash2 size={13}/></button></div>
+          </div>
         ))}
-        <button onClick={() => setCV(p => ({ ...p, languages: [...p.languages, { id: uid(), language: '', level: '' }] }))}
-          className="flex items-center gap-2" style={{ width: '100%', height: 44, background: 'var(--surface-card)', border: '1px dashed var(--hairline)', color: 'var(--muted)', fontSize: 12, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', cursor: 'pointer', justifyContent: 'center' }}>
-          <Plus size={14} /> TAMBAH BAHASA
-        </button>
+        <AddBtn label={t.addLang} onClick={()=>setCV(p=>({...p,languages:[...p.languages,{id:uid(),language:'',level:''}]}))} />
       </div>
     )
 
+    // ── PREVIEW ──
     if (section === 'preview') return (
       <div>
-        <SectionHeader title="PREVIEW & UNDUH" desc="Pastikan semua informasi sudah benar sebelum mengunduh." />
-        <ATSScore cv={cv} template={template} />
+        <SH title={t.previewTitle} desc={t.previewDesc} />
+        <ATSScorePanel cv={cv} template={template} t={t} />
         <div className="flex flex-wrap gap-3 mb-6">
           <button onClick={downloadPDF} disabled={downloading} className="btn-m-accent flex items-center gap-2">
-            {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-            {downloading ? 'MEMBUAT PDF...' : 'DOWNLOAD PDF'}
+            {downloading?<Loader2 size={14} className="animate-spin"/>:<Download size={14}/>}
+            {downloading?(opt.cvLang==='id'?'MEMBUAT PDF...':'CREATING PDF...'):t.downloadPDF}
           </button>
-          <button onClick={downloadHTML} className="btn-m flex items-center gap-2">
-            <FileText size={14} /> DOWNLOAD HTML
-          </button>
-          <button onClick={() => window.print()} className="btn-m flex items-center gap-2">
-            <Eye size={14} /> PRINT / SAVE PDF
-          </button>
+          <button onClick={downloadHTML} className="btn-m flex items-center gap-2"><FileText size={14}/> {t.downloadHTML}</button>
+          <button onClick={()=>window.print()} className="btn-m flex items-center gap-2"><Eye size={14}/> {t.print}</button>
         </div>
-        <div style={{ border: '1px solid var(--hairline)', overflow: 'auto', background: '#f5f5f5', padding: 20 }}>
-          <CVPreview cv={cv} template={template} />
+        <div style={{ border:'1px solid var(--hairline)',overflow:'auto',background:'#e0e0e0',padding:20 }}>
+          <div id="cv-render"><CVPreview cv={cv} template={template} opt={opt}/></div>
         </div>
       </div>
     )
   }
 
+  // ── Render ──
   return (
-    <div style={{ minHeight: '100vh', paddingTop: 80, background: 'var(--canvas)' }}>
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8">
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+    <div style={{ minHeight:'100vh',paddingTop:80,background:'var(--canvas)' }}>
+      <div className="max-w-[1440px] mx-auto px-4 lg:px-8 py-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="m-stripe" style={{ width: 24, height: 3 }} />
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '2px', color: 'var(--muted)', textTransform: 'uppercase' }}>CV GENERATOR</span>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="m-stripe" style={{ width:24,height:3 }} />
+              <span style={{ fontSize:11,fontWeight:700,letterSpacing:'2px',color:'var(--muted)',textTransform:'uppercase' }}>CV GENERATOR</span>
             </div>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, color: 'var(--ink)', textTransform: 'uppercase' }}>
-              BUAT CV PROFESIONAL
+            <h1 style={{ fontFamily:'var(--font-display)',fontSize:24,fontWeight:700,color:'var(--ink)',textTransform:'uppercase' }}>
+              {opt.cvLang==='id'?'BUAT CV PROFESIONAL':'CREATE PROFESSIONAL CV'}
             </h1>
           </div>
-          <div className="flex items-center gap-2">
-            <span style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 700, letterSpacing: '1px' }}>TEMPLATE:</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--m-blue-light)', textTransform: 'uppercase' }}>{template.name}</span>
-          </div>
+          <span style={{ fontSize:11,fontWeight:700,color:template.accent,textTransform:'uppercase' }}>{template.name}</span>
         </div>
 
-        {/* Error */}
         {aiError && (
-          <div className="flex items-center gap-2 mb-4 p-3" style={{ background: 'rgba(226,39,24,0.06)', border: '1px solid rgba(226,39,24,0.3)' }}>
-            <span style={{ fontSize: 12, color: 'var(--m-red)' }}>{aiError}</span>
-            <button onClick={() => setAiError('')} style={{ marginLeft: 'auto', color: 'var(--muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>✕</button>
+          <div className="flex items-center gap-2 mb-4 p-3" style={{ background:'rgba(226,39,24,0.06)',border:'1px solid rgba(226,39,24,0.3)' }}>
+            <span style={{ fontSize:12,color:'var(--m-red)',flex:1 }}>{aiError}</span>
+            <button onClick={()=>setAiError('')} style={{ color:'var(--muted)',background:'none',border:'none',cursor:'pointer',fontSize:14 }}>✕</button>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_340px] gap-4">
-
-          {/* Sidebar Nav */}
-          <nav style={{ background: 'var(--surface-card)', border: '1px solid var(--hairline)', height: 'fit-content', position: 'sticky', top: 80 }}>
-            {SECTIONS.map((s) => {
+        <div className="grid grid-cols-1 lg:grid-cols-[190px_1fr_310px] gap-4">
+          {/* Sidebar */}
+          <nav style={{ background:'var(--surface-card)',border:'1px solid var(--hairline)',height:'fit-content',position:'sticky',top:80 }}>
+            {SECTIONS.map(s => {
               const Icon = s.icon
               const isActive = section === s.id
               return (
-                <button key={s.id} onClick={() => setSection(s.id)} className="w-full flex items-center gap-3 transition-all"
-                  style={{ padding: '12px 16px', background: isActive ? 'var(--surface-elevated)' : 'transparent', borderLeft: isActive ? '3px solid var(--m-blue-dark)' : '3px solid transparent', borderBottom: '1px solid var(--hairline)', cursor: 'pointer', textAlign: 'left' }}>
-                  <Icon size={14} style={{ color: isActive ? 'var(--m-blue-light)' : 'var(--muted)', flexShrink: 0 }} />
-                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: isActive ? 'var(--ink)' : 'var(--muted)' }}>{s.label}</span>
-                  {isActive && <ChevronDown size={11} style={{ color: 'var(--m-blue-light)', marginLeft: 'auto' }} />}
+                <button key={s.id} onClick={()=>setSection(s.id)} className="w-full flex items-center gap-3 transition-all"
+                  style={{ padding:'11px 14px',background:isActive?'var(--surface-elevated)':'transparent',borderLeft:isActive?'3px solid var(--m-blue-dark)':'3px solid transparent',borderBottom:'1px solid var(--hairline)',cursor:'pointer',textAlign:'left' }}>
+                  <Icon size={13} style={{ color:isActive?'var(--m-blue-light)':'var(--muted)',flexShrink:0 }} />
+                  <span style={{ fontSize:11,fontWeight:700,letterSpacing:'0.5px',textTransform:'uppercase',color:isActive?'var(--ink)':'var(--muted)' }}>{t.sectionLabels[s.id]}</span>
                 </button>
               )
             })}
           </nav>
 
-          {/* Form Area */}
+          {/* Form */}
           <div>
-            <div style={{ background: 'var(--surface-card)', border: '1px solid var(--hairline)', padding: 28, marginBottom: 8 }}>
+            <div style={{ background:'var(--surface-card)',border:'1px solid var(--hairline)',padding:22,marginBottom:8 }}>
               {renderSection()}
             </div>
-            {/* Nav Buttons */}
             <div className="flex justify-between">
-              <button onClick={() => setSection(SECTIONS[sectionIdx - 1]?.id)} disabled={!canGoBack}
-                className="flex items-center gap-2" style={{ height: 40, padding: '0 20px', background: 'var(--surface-card)', border: '1px solid var(--hairline)', color: canGoBack ? 'var(--body)' : 'var(--muted)', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', cursor: canGoBack ? 'pointer' : 'default' }}>
-                <ArrowLeft size={13} /> SEBELUMNYA
+              <button onClick={()=>setSection(SECTIONS[sIdx-1]?.id)} disabled={sIdx===0}
+                className="flex items-center gap-2" style={{ height:40,padding:'0 18px',background:'var(--surface-card)',border:'1px solid var(--hairline)',color:sIdx>0?'var(--body)':'var(--muted)',fontSize:11,fontWeight:700,letterSpacing:'1px',textTransform:'uppercase',cursor:sIdx>0?'pointer':'default' }}>
+                <ArrowLeft size={13}/> {t.prev}
               </button>
-              <button onClick={() => setSection(SECTIONS[sectionIdx + 1]?.id)} disabled={!canGoNext}
-                className="flex items-center gap-2" style={{ height: 40, padding: '0 20px', background: canGoNext ? 'var(--m-blue-dark)' : 'var(--surface-card)', border: '1px solid var(--hairline)', color: canGoNext ? 'var(--ink)' : 'var(--muted)', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', cursor: canGoNext ? 'pointer' : 'default' }}>
-                SELANJUTNYA <ArrowRight size={13} />
+              <button onClick={()=>setSection(SECTIONS[sIdx+1]?.id)} disabled={sIdx===SECTIONS.length-1}
+                className="flex items-center gap-2" style={{ height:40,padding:'0 18px',background:sIdx<SECTIONS.length-1?'var(--m-blue-dark)':'var(--surface-card)',border:'1px solid var(--hairline)',color:sIdx<SECTIONS.length-1?'#fff':'var(--muted)',fontSize:11,fontWeight:700,letterSpacing:'1px',textTransform:'uppercase',cursor:sIdx<SECTIONS.length-1?'pointer':'default' }}>
+                {t.next} <ArrowRight size={13}/>
               </button>
             </div>
           </div>
 
           {/* Live Preview */}
-          <div style={{ position: 'sticky', top: 80, height: 'fit-content', maxHeight: 'calc(100vh - 100px)', overflow: 'auto' }}>
-            <div style={{ background: 'var(--surface-elevated)', border: '1px solid var(--hairline)', padding: '8px 12px', marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase' }}>LIVE PREVIEW</span>
-              <button onClick={downloadPDF} disabled={downloading} className="flex items-center gap-1.5"
-                style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', color: 'var(--m-blue-light)', textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer' }}>
-                {downloading ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
-                PDF
+          <div style={{ position:'sticky',top:80,height:'fit-content',maxHeight:'calc(100vh - 100px)',overflow:'hidden' }}>
+            <div style={{ background:'var(--surface-elevated)',border:'1px solid var(--hairline)',padding:'8px 12px',marginBottom:4,display:'flex',alignItems:'center',justifyContent:'space-between' }}>
+              <span style={{ fontSize:10,fontWeight:700,letterSpacing:'1.5px',color:'var(--muted)',textTransform:'uppercase' }}>{t.livePreview}</span>
+              <button onClick={downloadPDF} disabled={downloading} style={{ fontSize:10,fontWeight:700,color:'var(--m-blue-light)',textTransform:'uppercase',background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:5 }}>
+                {downloading?<Loader2 size={11} className="animate-spin"/>:<Download size={11}/>} PDF
               </button>
             </div>
-            <div style={{ transform: 'scale(0.42)', transformOrigin: 'top left', width: '238%', pointerEvents: 'none' }}>
-              <CVPreview cv={cv} template={template} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function SectionHeader({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--hairline)' }}>
-      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--ink)', textTransform: 'uppercase', marginBottom: 4 }}>{title}</h2>
-      <p style={{ fontSize: 12, fontWeight: 300, color: 'var(--muted)', lineHeight: 1.5 }}>{desc}</p>
-    </div>
-  )
-}
-
-function ExpCard({ exp, idx, total, onChange, onDelete, onMove, onAIEnhance, aiLoading }: {
-  exp: WorkExp; idx: number; total: number
-  onChange: (e: WorkExp) => void; onDelete: () => void
-  onMove: (dir: 'up' | 'down') => void; onAIEnhance: () => void; aiLoading: boolean
-}) {
-  const [open, setOpen] = useState(true)
-  return (
-    <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--hairline)', marginBottom: 12 }}>
-      <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => setOpen(!open)} style={{ borderBottom: open ? '1px solid var(--hairline)' : 'none' }}>
-        <div>
-          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)', margin: 0 }}>{exp.role || `Pengalaman ${idx + 1}`}</p>
-          {exp.company && <p style={{ fontSize: 11, color: 'var(--muted)', margin: '2px 0 0' }}>{exp.company}</p>}
-        </div>
-        <div className="flex items-center gap-2">
-          {idx > 0 && <button onClick={e => { e.stopPropagation(); onMove('up') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: 4 }}><MoveUp size={12} /></button>}
-          {idx < total - 1 && <button onClick={e => { e.stopPropagation(); onMove('down') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: 4 }}><MoveDown size={12} /></button>}
-          <button onClick={e => { e.stopPropagation(); onDelete() }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--m-red)', padding: 4 }}><Trash2 size={13} /></button>
-          {open ? <ChevronUp size={14} style={{ color: 'var(--muted)' }} /> : <ChevronDown size={14} style={{ color: 'var(--muted)' }} />}
-        </div>
-      </div>
-      {open && (
-        <div style={{ padding: '16px 16px 12px' }}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-            <Field label="Jabatan / Role" value={exp.role} onChange={v => onChange({ ...exp, role: v })} placeholder="Software Engineer" required />
-            <Field label="Nama Perusahaan" value={exp.company} onChange={v => onChange({ ...exp, company: v })} placeholder="PT Teknologi Maju" required />
-            <Field label="Tanggal Mulai" value={exp.startDate} onChange={v => onChange({ ...exp, startDate: v })} placeholder="Jan 2022" />
-            <Field label="Tanggal Selesai" value={exp.endDate} onChange={v => onChange({ ...exp, endDate: v })} placeholder="Des 2024 (kosongkan jika masih aktif)" />
-            <Field label="Lokasi" value={exp.location} onChange={v => onChange({ ...exp, location: v })} placeholder="Jakarta / Remote" />
-          </div>
-          <div className="flex items-center gap-2 mb-3" style={{ marginTop: -8 }}>
-            <input type="checkbox" checked={exp.current} onChange={e => onChange({ ...exp, current: e.target.checked })} id={`current-${exp.id}`} style={{ accentColor: 'var(--m-blue-dark)' }} />
-            <label htmlFor={`current-${exp.id}`} style={{ fontSize: 12, color: 'var(--body)', cursor: 'pointer' }}>Masih bekerja di sini</label>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <div className="flex items-center justify-between mb-2">
-              <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)' }}>DESKRIPSI PEKERJAAN</label>
-              <button onClick={onAIEnhance} disabled={aiLoading} className="flex items-center gap-1.5"
-                style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1px', color: aiLoading ? 'var(--muted)' : 'var(--m-blue-light)', textTransform: 'uppercase', background: 'none', border: '1px solid var(--hairline)', padding: '3px 8px', cursor: 'pointer' }}>
-                {aiLoading ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} AI ENHANCE
-              </button>
-            </div>
-            <textarea value={exp.description} onChange={e => onChange({ ...exp, description: e.target.value })}
-              placeholder="Deskripsikan tanggung jawab dan pencapaian utama kamu..." rows={3}
-              className="input-base" style={{ height: 'auto', resize: 'vertical', fontSize: 13, lineHeight: 1.6 }} />
-          </div>
-          <div>
-            <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', display: 'block', marginBottom: 8 }}>PENCAPAIAN (BULLETS)</label>
-            {exp.achievements.map((ach, ai) => (
-              <div key={ai} className="flex items-center gap-2 mb-2">
-                <span style={{ fontSize: 12, color: 'var(--m-blue-light)', flexShrink: 0 }}>•</span>
-                <input value={ach} onChange={e => { const arr = [...exp.achievements]; arr[ai] = e.target.value; onChange({ ...exp, achievements: arr }) }}
-                  placeholder="Meningkatkan performa aplikasi sebesar 40% dengan optimasi query database"
-                  className="input-base" style={{ height: 38, fontSize: 12, flex: 1 }} />
-                <button onClick={() => { const arr = exp.achievements.filter((_, i) => i !== ai); onChange({ ...exp, achievements: arr }) }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', flexShrink: 0 }}><Trash2 size={12} /></button>
+            <div style={{ background:'#e0e0e0',padding:8,overflow:'hidden' }}>
+              <div style={{ transform:'scale(0.38)',transformOrigin:'top left',width:'263%',pointerEvents:'none' }}>
+                <CVPreview cv={cv} template={template} opt={opt}/>
               </div>
-            ))}
-            <button onClick={() => onChange({ ...exp, achievements: [...exp.achievements, ''] })}
-              style={{ fontSize: 10, fontWeight: 700, color: 'var(--m-blue-light)', letterSpacing: '1px', textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Plus size={11} /> TAMBAH PENCAPAIAN
-            </button>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function EduCard({ edu, idx, onChange, onDelete }: { edu: Education; idx: number; total: number; onChange: (e: Education) => void; onDelete: () => void }) {
-  const [open, setOpen] = useState(true)
-  return (
-    <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--hairline)', marginBottom: 12 }}>
-      <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => setOpen(!open)} style={{ borderBottom: open ? '1px solid var(--hairline)' : 'none' }}>
-        <div>
-          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)', margin: 0 }}>{edu.degree || `Pendidikan ${idx + 1}`}</p>
-          {edu.institution && <p style={{ fontSize: 11, color: 'var(--muted)', margin: '2px 0 0' }}>{edu.institution}</p>}
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={e => { e.stopPropagation(); onDelete() }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--m-red)', padding: 4 }}><Trash2 size={13} /></button>
-          {open ? <ChevronUp size={14} style={{ color: 'var(--muted)' }} /> : <ChevronDown size={14} style={{ color: 'var(--muted)' }} />}
-        </div>
-      </div>
-      {open && (
-        <div style={{ padding: '16px 16px 12px' }}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-            <Field label="Nama Institusi" value={edu.institution} onChange={v => onChange({ ...edu, institution: v })} placeholder="Universitas Indonesia" required />
-            <Field label="Gelar" value={edu.degree} onChange={v => onChange({ ...edu, degree: v })} placeholder="S1 / S2 / D3 / SMA" required />
-            <Field label="Jurusan / Program Studi" value={edu.field} onChange={v => onChange({ ...edu, field: v })} placeholder="Teknik Informatika" />
-            <Field label="IPK" value={edu.gpa} onChange={v => onChange({ ...edu, gpa: v })} placeholder="3.75 (opsional)" />
-            <Field label="Tahun Mulai" value={edu.startDate} onChange={v => onChange({ ...edu, startDate: v })} placeholder="2019" />
-            <Field label="Tahun Lulus" value={edu.endDate} onChange={v => onChange({ ...edu, endDate: v })} placeholder="2023 (kosongkan jika masih aktif)" />
-            <Field label="Penghargaan / Predikat" value={edu.honors} onChange={v => onChange({ ...edu, honors: v })} placeholder="Cumlaude / Dean's List" />
-          </div>
-          <div className="flex items-center gap-2" style={{ marginTop: -8 }}>
-            <input type="checkbox" checked={edu.current} onChange={e => onChange({ ...edu, current: e.target.checked })} id={`edu-current-${edu.id}`} style={{ accentColor: 'var(--m-blue-dark)' }} />
-            <label htmlFor={`edu-current-${edu.id}`} style={{ fontSize: 12, color: 'var(--body)', cursor: 'pointer' }}>Masih kuliah</label>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function SkillCard({ sg, onChange, onDelete }: { sg: SkillGroup; onChange: (s: SkillGroup) => void; onDelete: () => void }) {
-  const [input, setInput] = useState('')
-  return (
-    <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--hairline)', padding: 16, marginBottom: 12 }}>
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <input value={sg.category} onChange={e => onChange({ ...sg, category: e.target.value })}
-          placeholder="Kategori (cth: Programming Languages)"
-          className="input-base" style={{ height: 38, fontSize: 12, flex: 1 }} />
-        <button onClick={onDelete} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--m-red)', padding: 4, flexShrink: 0 }}><Trash2 size={13} /></button>
-      </div>
-      <div className="flex flex-wrap gap-2 mb-3">
-        {sg.items.map((item, i) => (
-          <span key={i} className="flex items-center gap-1" style={{ background: 'var(--surface-elevated)', border: '1px solid var(--hairline)', padding: '3px 10px', fontSize: 11, color: 'var(--body)' }}>
-            {item}
-            <button onClick={() => onChange({ ...sg, items: sg.items.filter((_, idx) => idx !== i) })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: '0 0 0 4px', lineHeight: 1 }}>✕</button>
-          </span>
-        ))}
-      </div>
-      <div className="flex gap-2">
-        <input value={input} onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if ((e.key === 'Enter' || e.key === ',') && input.trim()) { onChange({ ...sg, items: [...sg.items, input.trim()] }); setInput('') } }}
-          placeholder="Ketik skill lalu Enter..." className="input-base" style={{ height: 36, fontSize: 12, flex: 1 }} />
-        <button onClick={() => { if (input.trim()) { onChange({ ...sg, items: [...sg.items, input.trim()] }); setInput('') } }}
-          style={{ height: 36, padding: '0 14px', background: 'var(--m-blue-dark)', border: 'none', color: '#fff', fontSize: 11, fontWeight: 700, letterSpacing: '1px', cursor: 'pointer' }}>
-          <Plus size={13} />
-        </button>
-      </div>
-      <p style={{ fontSize: 10, color: 'var(--muted)', marginTop: 6 }}>Tekan Enter atau koma untuk menambahkan skill</p>
-    </div>
-  )
-}
-
-function ProjectCard({ proj, onChange, onDelete }: { proj: Project; onChange: (p: Project) => void; onDelete: () => void }) {
-  const [open, setOpen] = useState(true)
-  return (
-    <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--hairline)', marginBottom: 12 }}>
-      <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => setOpen(!open)} style={{ borderBottom: open ? '1px solid var(--hairline)' : 'none' }}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)', margin: 0 }}>{proj.name || 'Proyek Baru'}</p>
-        <div className="flex items-center gap-2">
-          <button onClick={e => { e.stopPropagation(); onDelete() }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--m-red)', padding: 4 }}><Trash2 size={13} /></button>
-          {open ? <ChevronUp size={14} style={{ color: 'var(--muted)' }} /> : <ChevronDown size={14} style={{ color: 'var(--muted)' }} />}
-        </div>
-      </div>
-      {open && (
-        <div style={{ padding: '16px 16px 12px' }}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-            <Field label="Nama Proyek" value={proj.name} onChange={v => onChange({ ...proj, name: v })} placeholder="E-Commerce Platform" required />
-            <Field label="Teknologi" value={proj.tech} onChange={v => onChange({ ...proj, tech: v })} placeholder="Next.js, Node.js, PostgreSQL" />
-            <Field label="URL / Link" value={proj.url} onChange={v => onChange({ ...proj, url: v })} placeholder="github.com/user/project" />
-            <Field label="Periode" value={proj.startDate} onChange={v => onChange({ ...proj, startDate: v })} placeholder="Jan 2024 – Mar 2024" />
-          </div>
-          <TextArea label="Deskripsi Proyek" value={proj.description} onChange={v => onChange({ ...proj, description: v })} placeholder="Jelaskan konteks, peran kamu, dan hasil yang dicapai..." rows={3} />
-        </div>
-      )}
-    </div>
-  )
-}
-
-function CertCard({ cert, onChange, onDelete }: { cert: Certification; onChange: (c: Certification) => void; onDelete: () => void }) {
-  return (
-    <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--hairline)', padding: 16, marginBottom: 12 }}>
-      <div className="flex justify-end mb-2">
-        <button onClick={onDelete} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--m-red)' }}><Trash2 size={13} /></button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-        <Field label="Nama Sertifikasi" value={cert.name} onChange={v => onChange({ ...cert, name: v })} placeholder="AWS Certified Developer" required />
-        <Field label="Penerbit" value={cert.issuer} onChange={v => onChange({ ...cert, issuer: v })} placeholder="Amazon Web Services" required />
-        <Field label="Tanggal" value={cert.date} onChange={v => onChange({ ...cert, date: v })} placeholder="Nov 2024" />
-        <Field label="Credential ID" value={cert.credentialId} onChange={v => onChange({ ...cert, credentialId: v })} placeholder="ABC123XYZ" />
-        <Field label="URL Verifikasi" value={cert.url} onChange={v => onChange({ ...cert, url: v })} placeholder="credly.com/..." />
-      </div>
-    </div>
-  )
-}
-
-function LangCard({ lang, onChange, onDelete }: { lang: LangItem; onChange: (l: LangItem) => void; onDelete: () => void }) {
-  return (
-    <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--hairline)', padding: 16, marginBottom: 12 }}>
-      <div className="grid grid-cols-2 gap-4 items-end">
-        <Field label="Bahasa" value={lang.language} onChange={v => onChange({ ...lang, language: v })} placeholder="Bahasa Inggris" required />
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>TINGKAT KEMAMPUAN</label>
-          <select value={lang.level} onChange={e => onChange({ ...lang, level: e.target.value })}
-            className="input-base" style={{ height: 42, fontSize: 13 }}>
-            <option value="">Pilih tingkat...</option>
-            <option value="Native / Bahasa Ibu">Native / Bahasa Ibu</option>
-            <option value="Professional Working Proficiency">Professional Working Proficiency</option>
-            <option value="Full Professional Proficiency">Full Professional Proficiency</option>
-            <option value="Limited Working Proficiency">Limited Working Proficiency</option>
-            <option value="Elementary">Elementary / Dasar</option>
-          </select>
-        </div>
-        <div style={{ gridColumn: '2', display: 'flex', justifyContent: 'flex-end', marginTop: -16 }}>
-          <button onClick={onDelete} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--m-red)' }}><Trash2 size={13} /></button>
         </div>
       </div>
     </div>
