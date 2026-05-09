@@ -868,7 +868,7 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
     // ── TEMPLATE ──
     if (section === 'template') return (
       <div>
-        <SH title={t.selectTemplate} desc={opt.cvLang === 'id' ? 'Template menentukan tampilan dan peluang lolos ATS.' : 'Template determines appearance and ATS pass rate.'} />
+        <SH title={opt.cvLang === 'id' ? 'PILIH TEMPLATE' : 'SELECT TEMPLATE'} desc={opt.cvLang === 'id' ? 'Template menentukan tampilan dan peluang lolos ATS.' : 'Template determines appearance and ATS pass rate.'} />
         <div className="grid grid-cols-2 md:grid-cols-3 gap-px mb-6" style={{ border: '1px solid var(--hairline)' }}>
           {TEMPLATES.map(tmpl => {
             const isActive = template.id === tmpl.id
