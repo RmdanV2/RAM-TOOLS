@@ -1,10 +1,10 @@
 'use client'
 import { useState } from 'react'
 import {
-  User, Briefcase, GraduationCap, Award, Code2, Globe, Phone, Mail,
-  MapPin, Plus, Trash2, Download, Eye, ArrowLeft, ArrowRight, Check,
+  User, Briefcase, GraduationCap, Award, Code2, Globe,
+  Plus, Trash2, Download, Eye, ArrowLeft, ArrowRight, Check,
   Sparkles, Star, Loader2, FileText, Palette, MoveUp, MoveDown,
-  Languages, Settings2, Linkedin, Github, ExternalLink, type LucideIcon,
+  Settings2, type LucideIcon,
 } from 'lucide-react'
 import type { Lang } from '@/lib/i18n'
 
@@ -109,11 +109,11 @@ async function apiCall(payload: { message: string; system?: string; engine: 'gpt
 }
 
 // ─── CV Section Block ─────────────────────────────────────────────────────────
-function CVBlock({ title, accent, useIcons, icon: Icon, children, noMargin }: { title: string; accent: string; useIcons: boolean; icon?: LucideIcon; children: React.ReactNode; noMargin?: boolean }) {
+function CVBlock({ title, accent, useIcons, iconName, children, noMargin }: { title: string; accent: string; useIcons: boolean; iconName?: IconKey; children: React.ReactNode; noMargin?: boolean }) {
   return (
     <div style={{ marginBottom: noMargin ? 0 : 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
-        {useIcons && Icon && <Icon size={10} color={accent} strokeWidth={2.5} />}
+        {useIcons && iconName && <SvgIcon name={iconName} size={10} color={accent} />}
         <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '2px', color: accent, textTransform: 'uppercase' }}>{title}</span>
       </div>
       <div style={{ height: 1.5, background: `linear-gradient(to right, ${accent}, ${accent}44, transparent)`, marginBottom: 10 }} />
@@ -122,12 +122,33 @@ function CVBlock({ title, accent, useIcons, icon: Icon, children, noMargin }: { 
   )
 }
 
-// ─── Contact Item ─────────────────────────────────────────────────────────────
-function CI({ icon: Icon, value, useIcons }: { icon: LucideIcon; value: string; useIcons: boolean }) {
+// ─── Inline SVG Icons (render correctly inside CV output / html2canvas) ───────
+type IconKey = 'mail' | 'phone' | 'mappin' | 'linkedin' | 'github' | 'globe' | 'link'
+
+const SVG_PATHS: Record<IconKey, React.ReactNode> = {
+  mail: <><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></>,
+  phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l.77-.77a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>,
+  mappin: <><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></>,
+  linkedin: <><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></>,
+  github: <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/>,
+  globe: <><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></>,
+  link: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>,
+}
+
+function SvgIcon({ name, size = 8, color = 'currentColor' }: { name: IconKey; size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', flexShrink: 0, verticalAlign: 'middle' }}>
+      {SVG_PATHS[name]}
+    </svg>
+  )
+}
+
+// ─── Contact Item — uses inline SVG for correct rendering ────────────────────
+function CI({ iconName, value, useIcons, color }: { iconName: IconKey; value: string; useIcons: boolean; color?: string }) {
   if (!value) return null
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3.5 }}>
-      {useIcons && <Icon size={8} strokeWidth={2} />}
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+      {useIcons && <SvgIcon name={iconName} size={8.5} color={color || 'currentColor'} />}
       {value}
     </span>
   )
@@ -144,17 +165,17 @@ function ATSTemplate({ cv, opt, accent, fs, t }: TP) {
         <h1 style={{ fontSize: fs.h1, fontWeight: 700, color: '#0a0a0a', margin: '0 0 3px', letterSpacing: 0.3 }}>{cv.personal.name || 'Full Name'}</h1>
         <p style={{ fontSize: fs.h3, color: accent, fontWeight: 600, margin: '0 0 12px' }}>{cv.personal.title}</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px', fontSize: 9, color: '#555' }}>
-          <CI icon={Mail} value={cv.personal.email} useIcons={opt.useIcons} />
-          <CI icon={Phone} value={cv.personal.phone} useIcons={opt.useIcons} />
-          <CI icon={MapPin} value={cv.personal.location} useIcons={opt.useIcons} />
-          <CI icon={Linkedin} value={cv.personal.linkedin} useIcons={opt.useIcons} />
-          <CI icon={Github} value={cv.personal.github} useIcons={opt.useIcons} />
-          <CI icon={ExternalLink} value={cv.personal.website} useIcons={opt.useIcons} />
+          <CI iconName="mail" value={cv.personal.email} useIcons={opt.useIcons} />
+          <CI iconName="phone" value={cv.personal.phone} useIcons={opt.useIcons} />
+          <CI iconName="mappin" value={cv.personal.location} useIcons={opt.useIcons} />
+          <CI iconName="linkedin" value={cv.personal.linkedin} useIcons={opt.useIcons} />
+          <CI iconName="github" value={cv.personal.github} useIcons={opt.useIcons} />
+          <CI iconName="link" value={cv.personal.website} useIcons={opt.useIcons} />
         </div>
       </div>
-      {cv.personal.summary && <CVBlock title={t.headings.summary} accent={accent} useIcons={opt.useIcons} icon={User}><p style={{ fontSize: fs.base, color: '#444', lineHeight: 1.65, margin: 0 }}>{cv.personal.summary}</p></CVBlock>}
+      {cv.personal.summary && <CVBlock title={t.headings.summary} accent={accent} useIcons={opt.useIcons} iconName="mail"><p style={{ fontSize: fs.base, color: '#444', lineHeight: 1.65, margin: 0 }}>{cv.personal.summary}</p></CVBlock>}
       {cv.experience.length > 0 && (
-        <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} icon={Briefcase}>
+        <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} iconName="link">
           {cv.experience.map((e, i) => (
             <div key={e.id} style={{ marginBottom: i < cv.experience.length-1 ? 13 : 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -171,7 +192,7 @@ function ATSTemplate({ cv, opt, accent, fs, t }: TP) {
         </CVBlock>
       )}
       {cv.education.length > 0 && (
-        <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} icon={GraduationCap}>
+        <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} iconName="globe">
           {cv.education.map(e => (
             <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               <div>
@@ -184,7 +205,7 @@ function ATSTemplate({ cv, opt, accent, fs, t }: TP) {
         </CVBlock>
       )}
       {cv.skills.length > 0 && (
-        <CVBlock title={t.headings.skills} accent={accent} useIcons={opt.useIcons} icon={Code2}>
+        <CVBlock title={t.headings.skills} accent={accent} useIcons={opt.useIcons} iconName="link">
           {cv.skills.map(sg => sg.items.length > 0 && (
             <div key={sg.id} style={{ display: 'flex', flexWrap: 'wrap', gap: '0 6px', marginBottom: 5, alignItems: 'baseline' }}>
               {sg.category && <span style={{ fontSize: 9.5, fontWeight: 700, color: '#111', minWidth: 90 }}>{sg.category}:</span>}
@@ -194,7 +215,7 @@ function ATSTemplate({ cv, opt, accent, fs, t }: TP) {
         </CVBlock>
       )}
       {cv.projects.length > 0 && (
-        <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} icon={Star}>
+        <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} iconName="link">
           {cv.projects.map(p => (
             <div key={p.id} style={{ marginBottom: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -210,12 +231,12 @@ function ATSTemplate({ cv, opt, accent, fs, t }: TP) {
       {(cv.certifications.length > 0 || cv.languages.length > 0) && (
         <div style={{ display: 'grid', gridTemplateColumns: cv.certifications.length > 0 && cv.languages.length > 0 ? '1fr 1fr' : '1fr', gap: 20 }}>
           {cv.certifications.length > 0 && (
-            <CVBlock title={t.headings.certifications} accent={accent} useIcons={opt.useIcons} icon={Award} noMargin>
+            <CVBlock title={t.headings.certifications} accent={accent} useIcons={opt.useIcons} iconName="link" noMargin>
               {cv.certifications.map(c => <div key={c.id} style={{ marginBottom: 7 }}><p style={{ fontWeight: 700, fontSize: fs.base, color: '#111', margin: 0 }}>{c.name}</p><p style={{ fontSize: 9, color: '#888', margin: '1px 0 0' }}>{c.issuer}{c.date && ` · ${c.date}`}</p></div>)}
             </CVBlock>
           )}
           {cv.languages.length > 0 && (
-            <CVBlock title={t.headings.languages} accent={accent} useIcons={opt.useIcons} icon={Globe} noMargin>
+            <CVBlock title={t.headings.languages} accent={accent} useIcons={opt.useIcons} iconName="globe" noMargin>
               {cv.languages.map(l => <p key={l.id} style={{ fontSize: fs.base, color: '#555', margin: '0 0 5px' }}><strong style={{ color: '#111' }}>{l.language}</strong>{l.level && ` — ${l.level}`}</p>)}
             </CVBlock>
           )}
@@ -234,17 +255,17 @@ function ClassicTemplate({ cv, opt, accent, fs, t }: TP) {
         <h1 style={{ fontSize: fs.h1, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#0a0a0a', margin: '0 0 6px' }}>{cv.personal.name || 'FULL NAME'}</h1>
         {cv.personal.title && <p style={{ fontSize: fs.h3, color: accent, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 12px', fontWeight: 600 }}>{cv.personal.title}</p>}
         <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '4px 14px', fontSize: 9, color: '#666' }}>
-          <CI icon={Mail} value={cv.personal.email} useIcons={opt.useIcons} />
-          <CI icon={Phone} value={cv.personal.phone} useIcons={opt.useIcons} />
-          <CI icon={MapPin} value={cv.personal.location} useIcons={opt.useIcons} />
-          <CI icon={Linkedin} value={cv.personal.linkedin} useIcons={opt.useIcons} />
-          <CI icon={ExternalLink} value={cv.personal.website} useIcons={opt.useIcons} />
+          <CI iconName="mail" value={cv.personal.email} useIcons={opt.useIcons} />
+          <CI iconName="phone" value={cv.personal.phone} useIcons={opt.useIcons} />
+          <CI iconName="mappin" value={cv.personal.location} useIcons={opt.useIcons} />
+          <CI iconName="linkedin" value={cv.personal.linkedin} useIcons={opt.useIcons} />
+          <CI iconName="link" value={cv.personal.website} useIcons={opt.useIcons} />
         </div>
         <div style={{ height: 3, background: accent, marginTop: 14 }} />
       </div>
       {cv.personal.summary && <div style={{ marginBottom: 20, textAlign: 'center' }}><p style={{ fontSize: fs.base, color: '#555', lineHeight: 1.7, fontStyle: 'italic', maxWidth: 560, margin: '0 auto' }}>{cv.personal.summary}</p></div>}
       {cv.experience.length > 0 && (
-        <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} icon={Briefcase}>
+        <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} iconName="link">
           {cv.experience.map((e, i) => (
             <div key={e.id} style={{ marginBottom: i < cv.experience.length-1 ? 14 : 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -261,7 +282,7 @@ function ClassicTemplate({ cv, opt, accent, fs, t }: TP) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         <div>
           {cv.education.length > 0 && (
-            <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} icon={GraduationCap}>
+            <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} iconName="globe">
               {cv.education.map(e => (
                 <div key={e.id} style={{ marginBottom: 10 }}>
                   <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{e.degree}</p>
@@ -275,7 +296,7 @@ function ClassicTemplate({ cv, opt, accent, fs, t }: TP) {
         </div>
         <div>
           {cv.skills.length > 0 && (
-            <CVBlock title={t.headings.skills} accent={accent} useIcons={opt.useIcons} icon={Code2}>
+            <CVBlock title={t.headings.skills} accent={accent} useIcons={opt.useIcons} iconName="link">
               {cv.skills.map(sg => sg.items.length > 0 && (
                 <div key={sg.id} style={{ marginBottom: 7 }}>
                   {sg.category && <p style={{ fontSize: 9.5, fontWeight: 700, color: accent, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{sg.category}</p>}
@@ -285,19 +306,19 @@ function ClassicTemplate({ cv, opt, accent, fs, t }: TP) {
             </CVBlock>
           )}
           {cv.languages.length > 0 && (
-            <CVBlock title={t.headings.languages} accent={accent} useIcons={opt.useIcons} icon={Globe}>
+            <CVBlock title={t.headings.languages} accent={accent} useIcons={opt.useIcons} iconName="globe">
               {cv.languages.map(l => <p key={l.id} style={{ fontSize: fs.base, color: '#555', margin: '0 0 4px' }}><strong>{l.language}</strong>{l.level && ` — ${l.level}`}</p>)}
             </CVBlock>
           )}
           {cv.certifications.length > 0 && (
-            <CVBlock title={t.headings.certifications} accent={accent} useIcons={opt.useIcons} icon={Award}>
+            <CVBlock title={t.headings.certifications} accent={accent} useIcons={opt.useIcons} iconName="link">
               {cv.certifications.map(c => <div key={c.id} style={{ marginBottom: 6 }}><p style={{ fontSize: fs.base, color: '#111', fontWeight: 700, margin: 0 }}>{c.name}</p><p style={{ fontSize: 9, color: '#999', margin: '1px 0 0' }}>{c.issuer}{c.date && ` · ${c.date}`}</p></div>)}
             </CVBlock>
           )}
         </div>
       </div>
       {cv.projects.length > 0 && (
-        <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} icon={Star}>
+        <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} iconName="link">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
             {cv.projects.map(p => (
               <div key={p.id} style={{ marginBottom: 10 }}>
@@ -321,12 +342,12 @@ function ModernTemplate({ cv, opt, accent, fs, t }: TP) {
         <h1 style={{ fontSize: fs.h1, fontWeight: 700, margin: '0 0 4px', color: '#fff' }}>{cv.personal.name || 'Full Name'}</h1>
         <p style={{ fontSize: fs.h3, fontWeight: 400, margin: '0 0 14px', opacity: 0.9, color: '#fff' }}>{cv.personal.title}</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px', fontSize: 9, opacity: 0.92, color: '#fff' }}>
-          <CI icon={Mail} value={cv.personal.email} useIcons={opt.useIcons} />
-          <CI icon={Phone} value={cv.personal.phone} useIcons={opt.useIcons} />
-          <CI icon={MapPin} value={cv.personal.location} useIcons={opt.useIcons} />
-          <CI icon={Linkedin} value={cv.personal.linkedin} useIcons={opt.useIcons} />
-          <CI icon={Github} value={cv.personal.github} useIcons={opt.useIcons} />
-          <CI icon={ExternalLink} value={cv.personal.website} useIcons={opt.useIcons} />
+          <CI iconName="mail" value={cv.personal.email} useIcons={opt.useIcons} />
+          <CI iconName="phone" value={cv.personal.phone} useIcons={opt.useIcons} />
+          <CI iconName="mappin" value={cv.personal.location} useIcons={opt.useIcons} />
+          <CI iconName="linkedin" value={cv.personal.linkedin} useIcons={opt.useIcons} />
+          <CI iconName="github" value={cv.personal.github} useIcons={opt.useIcons} />
+          <CI iconName="link" value={cv.personal.website} useIcons={opt.useIcons} />
         </div>
       </div>
       <div style={{ padding: '24px 44px' }}>
@@ -334,7 +355,7 @@ function ModernTemplate({ cv, opt, accent, fs, t }: TP) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 230px', gap: 26 }}>
           <div>
             {cv.experience.length > 0 && (
-              <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} icon={Briefcase}>
+              <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} iconName="link">
                 {cv.experience.map((e, i) => (
                   <div key={e.id} style={{ marginBottom: i < cv.experience.length-1 ? 14 : 0, paddingLeft: 10, borderLeft: `2px solid ${accent}22` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -352,7 +373,7 @@ function ModernTemplate({ cv, opt, accent, fs, t }: TP) {
               </CVBlock>
             )}
             {cv.projects.length > 0 && (
-              <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} icon={Star}>
+              <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} iconName="link">
                 {cv.projects.map(p => (
                   <div key={p.id} style={{ marginBottom: 10, paddingLeft: 10, borderLeft: `2px solid ${accent}22` }}>
                     <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{p.name}{p.url && <span style={{ fontWeight: 400, color: accent, fontSize: 9, marginLeft: 5 }}>{p.url}</span>}</p>
@@ -365,7 +386,7 @@ function ModernTemplate({ cv, opt, accent, fs, t }: TP) {
           </div>
           <div>
             {cv.education.length > 0 && (
-              <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} icon={GraduationCap}>
+              <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} iconName="globe">
                 {cv.education.map(e => (
                   <div key={e.id} style={{ marginBottom: 10, padding: '8px 10px', background: '#f8f8f8', borderTop: `2px solid ${accent}` }}>
                     <p style={{ fontWeight: 700, fontSize: fs.base, margin: 0 }}>{e.degree}</p>
@@ -377,7 +398,7 @@ function ModernTemplate({ cv, opt, accent, fs, t }: TP) {
               </CVBlock>
             )}
             {cv.skills.length > 0 && (
-              <CVBlock title={t.headings.skills} accent={accent} useIcons={opt.useIcons} icon={Code2}>
+              <CVBlock title={t.headings.skills} accent={accent} useIcons={opt.useIcons} iconName="link">
                 {cv.skills.map(sg => sg.items.length > 0 && (
                   <div key={sg.id} style={{ marginBottom: 8 }}>
                     {sg.category && <p style={{ fontSize: 9.5, fontWeight: 700, color: '#111', margin: '0 0 4px' }}>{sg.category}</p>}
@@ -389,12 +410,12 @@ function ModernTemplate({ cv, opt, accent, fs, t }: TP) {
               </CVBlock>
             )}
             {cv.certifications.length > 0 && (
-              <CVBlock title={t.headings.certifications} accent={accent} useIcons={opt.useIcons} icon={Award}>
+              <CVBlock title={t.headings.certifications} accent={accent} useIcons={opt.useIcons} iconName="link">
                 {cv.certifications.map(c => <div key={c.id} style={{ marginBottom: 6 }}><p style={{ fontWeight: 700, fontSize: fs.base, margin: 0 }}>{c.name}</p><p style={{ fontSize: 9, color: '#999', margin: '1px 0 0' }}>{c.issuer}{c.date && ` · ${c.date}`}</p></div>)}
               </CVBlock>
             )}
             {cv.languages.length > 0 && (
-              <CVBlock title={t.headings.languages} accent={accent} useIcons={opt.useIcons} icon={Globe}>
+              <CVBlock title={t.headings.languages} accent={accent} useIcons={opt.useIcons} iconName="globe">
                 {cv.languages.map(l => <p key={l.id} style={{ fontSize: fs.base, color: '#555', margin: '0 0 4px' }}><strong>{l.language}</strong>{l.level && ` — ${l.level}`}</p>)}
               </CVBlock>
             )}
@@ -415,16 +436,16 @@ function ExecutiveTemplate({ cv, opt, accent, fs, t }: TP) {
         <p style={{ fontSize: fs.h3+1, color: accent, fontWeight: 600, margin: '0 0 16px', letterSpacing: 1.5 }}>{cv.personal.title}</p>
         <div style={{ height: 1, background: '#333', marginBottom: 14 }} />
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 22px', fontSize: 9, color: '#bbb' }}>
-          <CI icon={Mail} value={cv.personal.email} useIcons={opt.useIcons} />
-          <CI icon={Phone} value={cv.personal.phone} useIcons={opt.useIcons} />
-          <CI icon={MapPin} value={cv.personal.location} useIcons={opt.useIcons} />
-          <CI icon={Linkedin} value={cv.personal.linkedin} useIcons={opt.useIcons} />
+          <CI iconName="mail" value={cv.personal.email} useIcons={opt.useIcons} />
+          <CI iconName="phone" value={cv.personal.phone} useIcons={opt.useIcons} />
+          <CI iconName="mappin" value={cv.personal.location} useIcons={opt.useIcons} />
+          <CI iconName="linkedin" value={cv.personal.linkedin} useIcons={opt.useIcons} />
         </div>
       </div>
       <div style={{ padding: '28px 48px' }}>
         {cv.personal.summary && <div style={{ marginBottom: 22, padding: '14px 20px', borderLeft: `5px solid ${accent}`, background: '#fafafa' }}><p style={{ fontSize: fs.base+0.5, color: '#444', lineHeight: 1.7, margin: 0, fontStyle: 'italic' }}>{cv.personal.summary}</p></div>}
         {cv.experience.length > 0 && (
-          <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} icon={Briefcase}>
+          <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} iconName="link">
             {cv.experience.map((e, i) => (
               <div key={e.id} style={{ marginBottom: i < cv.experience.length-1 ? 16 : 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -441,7 +462,7 @@ function ExecutiveTemplate({ cv, opt, accent, fs, t }: TP) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
           <div>
             {cv.education.length > 0 && (
-              <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} icon={GraduationCap}>
+              <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} iconName="globe">
                 {cv.education.map(e => (
                   <div key={e.id} style={{ marginBottom: 10 }}>
                     <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{e.degree}{e.field && ` — ${e.field}`}</p>
@@ -452,14 +473,14 @@ function ExecutiveTemplate({ cv, opt, accent, fs, t }: TP) {
               </CVBlock>
             )}
             {cv.certifications.length > 0 && (
-              <CVBlock title={t.headings.certifications} accent={accent} useIcons={opt.useIcons} icon={Award}>
+              <CVBlock title={t.headings.certifications} accent={accent} useIcons={opt.useIcons} iconName="link">
                 {cv.certifications.map(c => <div key={c.id} style={{ marginBottom: 7 }}><p style={{ fontWeight: 700, fontSize: fs.base, margin: 0 }}>{c.name}</p><p style={{ fontSize: 9, color: '#aaa', fontFamily: 'Arial,sans-serif', margin: '1px 0 0' }}>{c.issuer}{c.date && ` · ${c.date}`}</p></div>)}
               </CVBlock>
             )}
           </div>
           <div>
             {cv.skills.length > 0 && (
-              <CVBlock title={t.headings.skills} accent={accent} useIcons={opt.useIcons} icon={Code2}>
+              <CVBlock title={t.headings.skills} accent={accent} useIcons={opt.useIcons} iconName="link">
                 {cv.skills.map(sg => sg.items.length > 0 && (
                   <div key={sg.id} style={{ marginBottom: 8 }}>
                     {sg.category && <p style={{ fontSize: 9.5, fontWeight: 700, color: '#111', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: 'Arial,sans-serif' }}>{sg.category}</p>}
@@ -469,14 +490,14 @@ function ExecutiveTemplate({ cv, opt, accent, fs, t }: TP) {
               </CVBlock>
             )}
             {cv.languages.length > 0 && (
-              <CVBlock title={t.headings.languages} accent={accent} useIcons={opt.useIcons} icon={Globe}>
+              <CVBlock title={t.headings.languages} accent={accent} useIcons={opt.useIcons} iconName="globe">
                 {cv.languages.map(l => <p key={l.id} style={{ fontSize: fs.base, margin: '0 0 4px', color: '#555' }}><strong style={{ color: '#111' }}>{l.language}</strong>{l.level && ` — ${l.level}`}</p>)}
               </CVBlock>
             )}
           </div>
         </div>
         {cv.projects.length > 0 && (
-          <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} icon={Star}>
+          <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} iconName="link">
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 28px' }}>
               {cv.projects.map(p => (
                 <div key={p.id} style={{ marginBottom: 10 }}>
@@ -502,11 +523,11 @@ function MinimalTemplate({ cv, opt, accent, fs, t }: TP) {
         {cv.personal.title && <p style={{ fontSize: fs.h3-0.5, color: '#999', fontWeight: 400, margin: '0 0 14px', letterSpacing: 2, textTransform: 'uppercase' }}>{cv.personal.title}</p>}
         <div style={{ width: 48, height: 2, background: accent, marginBottom: 14 }} />
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px', fontSize: 9, color: '#888' }}>
-          <CI icon={Mail} value={cv.personal.email} useIcons={opt.useIcons} />
-          <CI icon={Phone} value={cv.personal.phone} useIcons={opt.useIcons} />
-          <CI icon={MapPin} value={cv.personal.location} useIcons={opt.useIcons} />
-          <CI icon={Linkedin} value={cv.personal.linkedin} useIcons={opt.useIcons} />
-          <CI icon={ExternalLink} value={cv.personal.website} useIcons={opt.useIcons} />
+          <CI iconName="mail" value={cv.personal.email} useIcons={opt.useIcons} />
+          <CI iconName="phone" value={cv.personal.phone} useIcons={opt.useIcons} />
+          <CI iconName="mappin" value={cv.personal.location} useIcons={opt.useIcons} />
+          <CI iconName="linkedin" value={cv.personal.linkedin} useIcons={opt.useIcons} />
+          <CI iconName="link" value={cv.personal.website} useIcons={opt.useIcons} />
         </div>
       </div>
       {cv.personal.summary && <p style={{ fontSize: fs.base+0.5, lineHeight: 1.75, color: '#666', marginBottom: 28, fontWeight: 300, borderBottom: '1px solid #e0e0e0', paddingBottom: 22 }}>{cv.personal.summary}</p>}
@@ -583,12 +604,12 @@ function CreativeTemplate({ cv, opt, accent, fs, t }: TP) {
         </div>
         <div>
           <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: '2px', color: accent, textTransform: 'uppercase', marginBottom: 10, borderBottom: '1px solid #2a2a2a', paddingBottom: 5 }}>{t.contact}</p>
-          {cv.personal.email && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'flex-start' }}>{opt.useIcons && <Mail size={8.5} style={{ marginTop: 1.5, flexShrink: 0, color: accent }} />}<span style={{ fontSize: 9, color: '#ccc', wordBreak: 'break-all' }}>{cv.personal.email}</span></div>}
-          {cv.personal.phone && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'center' }}>{opt.useIcons && <Phone size={8.5} style={{ flexShrink: 0, color: accent }} />}<span style={{ fontSize: 9, color: '#ccc' }}>{cv.personal.phone}</span></div>}
-          {cv.personal.location && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'center' }}>{opt.useIcons && <MapPin size={8.5} style={{ flexShrink: 0, color: accent }} />}<span style={{ fontSize: 9, color: '#ccc' }}>{cv.personal.location}</span></div>}
-          {cv.personal.linkedin && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'flex-start' }}>{opt.useIcons && <Linkedin size={8.5} style={{ marginTop: 1.5, flexShrink: 0, color: accent }} />}<span style={{ fontSize: 9, color: '#ccc', wordBreak: 'break-all' }}>{cv.personal.linkedin}</span></div>}
-          {cv.personal.github && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'center' }}>{opt.useIcons && <Github size={8.5} style={{ flexShrink: 0, color: accent }} />}<span style={{ fontSize: 9, color: '#ccc' }}>{cv.personal.github}</span></div>}
-          {cv.personal.website && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'flex-start' }}>{opt.useIcons && <ExternalLink size={8.5} style={{ marginTop: 1.5, flexShrink: 0, color: accent }} />}<span style={{ fontSize: 9, color: '#ccc', wordBreak: 'break-all' }}>{cv.personal.website}</span></div>}
+          {cv.personal.email && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'flex-start' }}>{opt.useIcons && <SvgIcon name="mail" size={8.5} color={accent} />}<span style={{ fontSize: 9, color: '#ccc', wordBreak: 'break-all' }}>{cv.personal.email}</span></div>}
+          {cv.personal.phone && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'center' }}>{opt.useIcons && <SvgIcon name="phone" size={8.5} color={accent} />}<span style={{ fontSize: 9, color: '#ccc' }}>{cv.personal.phone}</span></div>}
+          {cv.personal.location && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'center' }}>{opt.useIcons && <SvgIcon name="mappin" size={8.5} color={accent} />}<span style={{ fontSize: 9, color: '#ccc' }}>{cv.personal.location}</span></div>}
+          {cv.personal.linkedin && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'flex-start' }}>{opt.useIcons && <SvgIcon name="linkedin" size={8.5} color={accent} />}<span style={{ fontSize: 9, color: '#ccc', wordBreak: 'break-all' }}>{cv.personal.linkedin}</span></div>}
+          {cv.personal.github && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'center' }}>{opt.useIcons && <SvgIcon name="github" size={8.5} color={accent} />}<span style={{ fontSize: 9, color: '#ccc' }}>{cv.personal.github}</span></div>}
+          {cv.personal.website && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'flex-start' }}>{opt.useIcons && <SvgIcon name="link" size={8.5} color={accent} />}<span style={{ fontSize: 9, color: '#ccc', wordBreak: 'break-all' }}>{cv.personal.website}</span></div>}
         </div>
         {cv.skills.length > 0 && (
           <div>
@@ -619,7 +640,7 @@ function CreativeTemplate({ cv, opt, accent, fs, t }: TP) {
       <div style={{ padding: '30px 28px', color: '#111' }}>
         {cv.personal.summary && <div style={{ marginBottom: 20, paddingBottom: 18, borderBottom: `2px solid ${accent}` }}><p style={{ fontSize: fs.base+0.5, color: '#555', lineHeight: 1.7, margin: 0 }}>{cv.personal.summary}</p></div>}
         {cv.experience.length > 0 && (
-          <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} icon={Briefcase}>
+          <CVBlock title={t.headings.experience} accent={accent} useIcons={opt.useIcons} iconName="link">
             {cv.experience.map((e, i) => (
               <div key={e.id} style={{ marginBottom: i < cv.experience.length-1 ? 14 : 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -634,7 +655,7 @@ function CreativeTemplate({ cv, opt, accent, fs, t }: TP) {
           </CVBlock>
         )}
         {cv.education.length > 0 && (
-          <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} icon={GraduationCap}>
+          <CVBlock title={t.headings.education} accent={accent} useIcons={opt.useIcons} iconName="globe">
             {cv.education.map(e => (
               <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div>
@@ -647,7 +668,7 @@ function CreativeTemplate({ cv, opt, accent, fs, t }: TP) {
           </CVBlock>
         )}
         {cv.projects.length > 0 && (
-          <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} icon={Star}>
+          <CVBlock title={t.headings.projects} accent={accent} useIcons={opt.useIcons} iconName="link">
             {cv.projects.map(p => (
               <div key={p.id} style={{ marginBottom: 10 }}>
                 <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{p.name}{p.url && <span style={{ fontWeight: 400, fontSize: 9, color: accent, marginLeft: 5 }}>{p.url}</span>}</p>
