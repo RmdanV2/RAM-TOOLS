@@ -197,7 +197,7 @@ function ATSTemplate({ cv, opt, accent, fs, t }: TP) {
             <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               <div>
                 <p style={{ fontWeight: 700, fontSize: fs.h3, color: '#0a0a0a', margin: 0 }}>{e.degree}{e.field && ` — ${e.field}`}</p>
-                <p style={{ color: accent, fontSize: fs.base, fontWeight: 600, margin: '2px 0 0' }}>{e.institution}{e.gpa && ` · ${t.gpa}: ${e.gpa}`}{e.honors && ` · ${e.honors}`}</p>
+                <p style={{ color: accent, fontSize: fs.base, fontWeight: 600, margin: '2px 0 0' }}>{e.institution}{e.gpa && ` · ${opt.cvLang==='id'?'IPK':'GPA'}: ${e.gpa}`}{e.honors && ` · ${e.honors}`}</p>
               </div>
               <p style={{ fontSize: 9, color: '#999', whiteSpace: 'nowrap', marginLeft: 10 }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}</p>
             </div>
@@ -288,7 +288,7 @@ function ClassicTemplate({ cv, opt, accent, fs, t }: TP) {
                   <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{e.degree}</p>
                   {e.field && <p style={{ fontSize: fs.base, color: '#666', margin: '1px 0', fontStyle: 'italic' }}>{e.field}</p>}
                   <p style={{ color: accent, fontSize: fs.base, fontWeight: 600, margin: '1px 0' }}>{e.institution}</p>
-                  <p style={{ fontSize: 9, color: '#999' }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}{e.gpa && ` · ${t.gpa}: ${e.gpa}`}</p>
+                  <p style={{ fontSize: 9, color: '#999' }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}{e.gpa && ` · ${opt.cvLang==='id'?'IPK':'GPA'}: ${e.gpa}`}</p>
                 </div>
               ))}
             </CVBlock>
@@ -392,7 +392,7 @@ function ModernTemplate({ cv, opt, accent, fs, t }: TP) {
                     <p style={{ fontWeight: 700, fontSize: fs.base, margin: 0 }}>{e.degree}</p>
                     {e.field && <p style={{ fontSize: 9, color: '#777', margin: '1px 0' }}>{e.field}</p>}
                     <p style={{ color: accent, fontSize: 9.5, fontWeight: 600, margin: '2px 0' }}>{e.institution}</p>
-                    <p style={{ fontSize: 9, color: '#aaa', margin: 0 }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}{e.gpa && ` · ${t.gpa} ${e.gpa}`}</p>
+                    <p style={{ fontSize: 9, color: '#aaa', margin: 0 }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}{e.gpa && ` · ${opt.cvLang==='id'?'IPK':'GPA'} ${e.gpa}`}</p>
                   </div>
                 ))}
               </CVBlock>
@@ -467,7 +467,7 @@ function ExecutiveTemplate({ cv, opt, accent, fs, t }: TP) {
                   <div key={e.id} style={{ marginBottom: 10 }}>
                     <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{e.degree}{e.field && ` — ${e.field}`}</p>
                     <p style={{ color: accent, fontWeight: 600, fontSize: fs.base, margin: '1px 0', fontStyle: 'italic' }}>{e.institution}</p>
-                    <p style={{ fontSize: 9, color: '#aaa', fontFamily: 'Arial,sans-serif', margin: 0 }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}{e.gpa && ` · ${t.gpa}: ${e.gpa}`}</p>
+                    <p style={{ fontSize: 9, color: '#aaa', fontFamily: 'Arial,sans-serif', margin: 0 }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}{e.gpa && ` · ${opt.cvLang==='id'?'IPK':'GPA'}: ${e.gpa}`}</p>
                   </div>
                 ))}
               </CVBlock>
@@ -569,7 +569,7 @@ function MinimalTemplate({ cv, opt, accent, fs, t }: TP) {
               {cv.education.map(e => (
                 <div key={e.id} style={{ marginBottom: 10 }}>
                   <p style={{ fontWeight: 600, fontSize: fs.base-0.5, margin: 0 }}>{e.degree}{e.field && ` — ${e.field}`}</p>
-                  <p style={{ fontSize: 9, color: '#888', margin: '2px 0' }}>{e.institution} · {e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}{e.gpa && ` · ${t.gpa} ${e.gpa}`}</p>
+                  <p style={{ fontSize: 9, color: '#888', margin: '2px 0' }}>{e.institution} · {e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}{e.gpa && ` · ${opt.cvLang==='id'?'IPK':'GPA'} ${e.gpa}`}</p>
                 </div>
               ))}
             </div>
@@ -603,7 +603,7 @@ function CreativeTemplate({ cv, opt, accent, fs, t }: TP) {
           <p style={{ fontSize: 9.5, color: accent, fontWeight: 700, margin: 0, textTransform: 'uppercase', letterSpacing: 1 }}>{cv.personal.title}</p>
         </div>
         <div>
-          <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: '2px', color: accent, textTransform: 'uppercase', marginBottom: 10, borderBottom: '1px solid #2a2a2a', paddingBottom: 5 }}>{t.contact}</p>
+          <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: '2px', color: accent, textTransform: 'uppercase', marginBottom: 10, borderBottom: '1px solid #2a2a2a', paddingBottom: 5 }}>{opt.cvLang==='id'?'KONTAK':'CONTACT'}</p>
           {cv.personal.email && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'flex-start' }}>{opt.useIcons && <SvgIcon name="mail" size={8.5} color={accent} />}<span style={{ fontSize: 9, color: '#ccc', wordBreak: 'break-all' }}>{cv.personal.email}</span></div>}
           {cv.personal.phone && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'center' }}>{opt.useIcons && <SvgIcon name="phone" size={8.5} color={accent} />}<span style={{ fontSize: 9, color: '#ccc' }}>{cv.personal.phone}</span></div>}
           {cv.personal.location && <div style={{ display: 'flex', gap: 7, marginBottom: 6, alignItems: 'center' }}>{opt.useIcons && <SvgIcon name="mappin" size={8.5} color={accent} />}<span style={{ fontSize: 9, color: '#ccc' }}>{cv.personal.location}</span></div>}
@@ -660,7 +660,7 @@ function CreativeTemplate({ cv, opt, accent, fs, t }: TP) {
               <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div>
                   <p style={{ fontWeight: 700, fontSize: fs.h3, margin: 0 }}>{e.degree}{e.field && ` — ${e.field}`}</p>
-                  <p style={{ color: accent, fontWeight: 600, fontSize: fs.base, margin: '2px 0 0' }}>{e.institution}{e.gpa && ` · ${t.gpa}: ${e.gpa}`}</p>
+                  <p style={{ color: accent, fontWeight: 600, fontSize: fs.base, margin: '2px 0 0' }}>{e.institution}{e.gpa && ` · ${opt.cvLang==='id'?'IPK':'GPA'}: ${e.gpa}`}</p>
                 </div>
                 <p style={{ fontSize: 9, color: '#999', marginLeft: 10, whiteSpace: 'nowrap' }}>{e.startDate}{e.startDate&&' – '}{e.current ? t.present : e.endDate}</p>
               </div>
@@ -721,7 +721,7 @@ function ATSScorePanel({ cv, template, t }: { cv: CVData; template: Template; t:
           <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 2 }}>{t.atsScore}</p>
           <p style={{ fontSize: 30, fontWeight: 700, color, lineHeight: 1 }}>{score}<span style={{ fontSize: 14 }}>%</span></p>
         </div>
-        <p style={{ fontSize: 11, color: 'var(--body)', fontWeight: 300, textAlign: 'right' }}>{score >= 80 ? t.atsReady : score >= 60 ? t.atsWarn : t.atsFail}</p>
+        <p style={{ fontSize: 11, color: 'var(--body)', fontWeight: 300, textAlign: 'right' }}>{score >= 80 ? opt.cvLang==='id'?'✓ Siap dikirim!':'✓ Ready to send!' : score >= 60 ? opt.cvLang==='id'?'⚠ Perlu perbaikan':'⚠ Needs improvement' : opt.cvLang==='id'?'✗ Lengkapi CV':'✗ Complete your CV'}</p>
       </div>
       <div style={{ height: 4, background: 'var(--surface-elevated)', marginBottom: 14 }}>
         <div style={{ height: 4, background: color, width: `${score}%`, transition: 'width 0.5s' }} />
@@ -955,7 +955,7 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Language */}
             <div>
-              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>{t.cvLangLabel}</p>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>{opt.cvLang==='id'?'BAHASA CV':'CV LANGUAGE'}</p>
               <div className="flex gap-2">
                 {(['id', 'en'] as CVLang[]).map(l => (
                   <button key={l} onClick={() => setOp('cvLang', l)}
@@ -967,19 +967,19 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
             </div>
             {/* Icons toggle */}
             <div>
-              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>{t.iconsLabel}</p>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>{opt.cvLang==='id'?'IKON KONTAK':'CONTACT ICONS'}</p>
               <div className="flex gap-2">
                 {[true, false].map(val => (
                   <button key={String(val)} onClick={() => setOp('useIcons', val)}
                     style={{ flex: 1, height: 38, background: opt.useIcons === val ? 'var(--m-blue-dark)' : 'var(--surface-elevated)', border: `1px solid ${opt.useIcons === val ? 'var(--m-blue-dark)' : 'var(--hairline)'}`, color: opt.useIcons === val ? '#fff' : 'var(--muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                    {val ? t.withIcons : t.noIcons}
+                    {val ? t.withIcons : opt.cvLang==='id'?'— TANPA IKON':'— NO ICONS'}
                   </button>
                 ))}
               </div>
             </div>
             {/* Accent color */}
             <div>
-              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>{t.accentLabel}</p>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>{opt.cvLang==='id'?'WARNA AKSEN':'ACCENT COLOR'}</p>
               <div className="flex flex-wrap gap-2">
                 {ACCENT_COLORS.map(c => (
                   <button key={c.value} onClick={() => setOp('accentColor', c.value)} title={c.label}
@@ -991,12 +991,12 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
             </div>
             {/* Font size */}
             <div>
-              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>{t.fontSizeLabel}</p>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>{opt.cvLang==='id'?'UKURAN FONT':'FONT SIZE'}</p>
               <div className="flex gap-2">
                 {(['small', 'normal', 'large'] as const).map(sz => (
                   <button key={sz} onClick={() => setOp('fontSize', sz)}
                     style={{ flex: 1, height: 38, background: opt.fontSize === sz ? 'var(--m-blue-dark)' : 'var(--surface-elevated)', border: `1px solid ${opt.fontSize === sz ? 'var(--m-blue-dark)' : 'var(--hairline)'}`, color: opt.fontSize === sz ? '#fff' : 'var(--muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>
-                    {sz === 'small' ? t.small : sz === 'normal' ? t.normal : t.large}
+                    {sz === 'small' ? opt.cvLang==='id'?'KECIL':'SMALL' : sz === 'normal' ? opt.cvLang==='id'?'NORMAL':'NORMAL' : opt.cvLang==='id'?'BESAR':'LARGE'}
                   </button>
                 ))}
               </div>
@@ -1025,7 +1025,7 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
             <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)' }}>{t.headings.summary}</label>
             <button onClick={aiSummary} disabled={!!aiLoading} className="flex items-center gap-1.5"
               style={{ fontSize: 10, fontWeight: 700, color: aiLoading === 'summary' ? 'var(--muted)' : 'var(--m-blue-light)', textTransform: 'uppercase', background: 'none', border: '1px solid var(--hairline)', padding: '4px 10px', cursor: 'pointer' }}>
-              {aiLoading === 'summary' ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />} {t.aiEnhance}
+              {aiLoading === 'summary' ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />} {opt.cvLang==='id'?'AI ENHANCE':'AI ENHANCE'}
             </button>
           </div>
           <textarea value={cv.personal.summary} onChange={e => upP('summary', e.target.value)}
@@ -1070,7 +1070,7 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
                 <div className="flex items-center justify-between mb-2">
                   <label style={{ fontSize:10,fontWeight:700,letterSpacing:'1.5px',textTransform:'uppercase',color:'var(--muted)' }}>{opt.cvLang==='id'?'DESKRIPSI':'DESCRIPTION'}</label>
                   <button onClick={()=>aiExp(exp.id)} disabled={!!aiLoading} style={{ fontSize:9,fontWeight:700,color:aiLoading==='exp-'+exp.id?'var(--muted)':'var(--m-blue-light)',textTransform:'uppercase',background:'none',border:'1px solid var(--hairline)',padding:'3px 8px',cursor:'pointer',display:'flex',alignItems:'center',gap:5 }}>
-                    {aiLoading==='exp-'+exp.id?<Loader2 size={10} className="animate-spin"/>:<Sparkles size={10}/>} {t.aiEnhance}
+                    {aiLoading==='exp-'+exp.id?<Loader2 size={10} className="animate-spin"/>:<Sparkles size={10}/>} {opt.cvLang==='id'?'AI ENHANCE':'AI ENHANCE'}
                   </button>
                 </div>
                 <textarea value={exp.description} onChange={e=>setCV(p=>({...p,experience:p.experience.map(ex=>ex.id===exp.id?{...ex,description:e.target.value}:ex)}))}
@@ -1120,11 +1120,11 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
             </div>
             <div className="flex items-center gap-2" style={{ marginTop:-8 }}>
               <input type="checkbox" checked={edu.current} onChange={e=>setCV(p=>({...p,education:p.education.map(ed=>ed.id===edu.id?{...ed,current:e.target.checked}:ed)}))} style={{ accentColor:'var(--m-blue-dark)' }} />
-              <label style={{ fontSize:12,color:'var(--body)',cursor:'pointer' }}>{t.stillStudying}</label>
+              <label style={{ fontSize:12,color:'var(--body)',cursor:'pointer' }}>{opt.cvLang==='id'?'Masih kuliah':'Currently studying'}</label>
             </div>
           </div>
         ))}
-        <AddBtn label={t.addEdu} onClick={()=>setCV(p=>({...p,education:[...p.education,{id:uid(),institution:'',degree:'',field:'',startDate:'',endDate:'',current:false,gpa:'',honors:''}]}))} />
+        <AddBtn label={opt.cvLang==='id'?'TAMBAH PENDIDIKAN':'ADD EDUCATION'} onClick={()=>setCV(p=>({...p,education:[...p.education,{id:uid(),institution:'',degree:'',field:'',startDate:'',endDate:'',current:false,gpa:'',honors:''}]}))} />
       </div>
     )
 
@@ -1134,7 +1134,7 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
         <SH title={t.sectionLabels.skills.toUpperCase()} desc={opt.cvLang==='id'?'Kelompokkan skill per kategori. Sesuaikan dengan job description.':'Group skills by category. Match with the job description.'} />
         <div className="flex justify-end mb-4">
           <button onClick={aiSkills} disabled={!!aiLoading} className="flex items-center gap-2" style={{ fontSize:11,fontWeight:700,color:aiLoading==='skills'?'var(--muted)':'var(--m-blue-light)',textTransform:'uppercase',background:'none',border:'1px solid rgba(0,102,177,0.3)',padding:'7px 14px',cursor:'pointer' }}>
-            {aiLoading==='skills'?<Loader2 size={12} className="animate-spin"/>:<Sparkles size={12}/>} {t.aiSuggest}
+            {aiLoading==='skills'?<Loader2 size={12} className="animate-spin"/>:<Sparkles size={12}/>} {opt.cvLang==='id'?'AI SUGGEST SKILLS':'AI SUGGEST SKILLS'}
           </button>
         </div>
         {cv.skills.map(sg => (
@@ -1162,7 +1162,7 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
             </div>
           </div>
         ))}
-        <AddBtn label={t.addSkill} onClick={()=>setCV(p=>({...p,skills:[...p.skills,{id:uid(),category:'',items:[]}]}))} />
+        <AddBtn label={opt.cvLang==='id'?'TAMBAH KELOMPOK SKILL':'ADD SKILL GROUP'} onClick={()=>setCV(p=>({...p,skills:[...p.skills,{id:uid(),category:'',items:[]}]}))} />
       </div>
     )
 
@@ -1209,7 +1209,7 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
             </div>
           </div>
         ))}
-        <AddBtn label={t.addCert} onClick={()=>setCV(p=>({...p,certifications:[...p.certifications,{id:uid(),name:'',issuer:'',date:'',credentialId:'',url:''}]}))} />
+        <AddBtn label={opt.cvLang==='id'?'TAMBAH SERTIFIKASI':'ADD CERTIFICATION'} onClick={()=>setCV(p=>({...p,certifications:[...p.certifications,{id:uid(),name:'',issuer:'',date:'',credentialId:'',url:''}]}))} />
       </div>
     )
 
@@ -1224,7 +1224,7 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
               <div style={{ marginBottom:14 }}>
                 <label style={{ display:'block',fontSize:10,fontWeight:700,letterSpacing:'1.5px',textTransform:'uppercase',color:'var(--muted)',marginBottom:5 }}>{opt.cvLang==='id'?'TINGKAT':'LEVEL'}</label>
                 <select value={l.level} onChange={e=>setCV(p=>({...p,languages:p.languages.map(x=>x.id===l.id?{...x,level:e.target.value}:x)}))} className="input-base" style={{ height:40,fontSize:13 }}>
-                  <option value="">{t.selectLevel}</option>
+                  <option value="">{opt.cvLang === 'id' ? 'Pilih tingkat...' : 'Select level...'}</option>
                   <option value="Native / Bahasa Ibu">Native / Bahasa Ibu</option>
                   <option value="Full Professional Proficiency">Full Professional Proficiency (C2)</option>
                   <option value="Professional Working Proficiency">Professional Working Proficiency (C1)</option>
@@ -1236,22 +1236,22 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
             <div className="flex justify-end" style={{ marginTop:-8 }}><button onClick={()=>setCV(p=>({...p,languages:p.languages.filter(x=>x.id!==l.id)}))} style={{ background:'none',border:'none',cursor:'pointer',color:'var(--m-red)' }}><Trash2 size={13}/></button></div>
           </div>
         ))}
-        <AddBtn label={t.addLang} onClick={()=>setCV(p=>({...p,languages:[...p.languages,{id:uid(),language:'',level:''}]}))} />
+        <AddBtn label={opt.cvLang==='id'?'TAMBAH BAHASA':'ADD LANGUAGE'} onClick={()=>setCV(p=>({...p,languages:[...p.languages,{id:uid(),language:'',level:''}]}))} />
       </div>
     )
 
     // ── PREVIEW ──
     if (section === 'preview') return (
       <div>
-        <SH title={t.previewTitle} desc={t.previewDesc} />
+        <SH title={opt.cvLang==='id'?'SEBELUMNYA':'PREVIOUS'iewTitle} desc={opt.cvLang==='id'?'SEBELUMNYA':'PREVIOUS'iewDesc} />
         <ATSScorePanel cv={cv} template={template} t={t} />
         <div className="flex flex-wrap gap-3 mb-6">
           <button onClick={downloadPDF} disabled={downloading} className="btn-m-accent flex items-center gap-2">
             {downloading?<Loader2 size={14} className="animate-spin"/>:<Download size={14}/>}
             {downloading?(opt.cvLang==='id'?'MEMBUAT PDF...':'CREATING PDF...'):t.downloadPDF}
           </button>
-          <button onClick={downloadHTML} className="btn-m flex items-center gap-2"><FileText size={14}/> {t.downloadHTML}</button>
-          <button onClick={()=>window.print()} className="btn-m flex items-center gap-2"><Eye size={14}/> {t.print}</button>
+          <button onClick={downloadHTML} className="btn-m flex items-center gap-2"><FileText size={14}/> {opt.cvLang==='id'?'UNDUH HTML':'DOWNLOAD HTML'}</button>
+          <button onClick={()=>window.print()} className="btn-m flex items-center gap-2"><Eye size={14}/> {opt.cvLang==='id'?'CETAK':'PRINT'}</button>
         </div>
         <div style={{ border:'1px solid var(--hairline)',overflow:'auto',background:'#e0e0e0',padding:20 }}>
           <div id="cv-render"><CVPreview cv={cv} template={template} opt={opt}/></div>
@@ -1308,11 +1308,11 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
             <div className="flex justify-between">
               <button onClick={()=>setSection(SECTIONS[sIdx-1]?.id)} disabled={sIdx===0}
                 className="flex items-center gap-2" style={{ height:40,padding:'0 18px',background:'var(--surface-card)',border:'1px solid var(--hairline)',color:sIdx>0?'var(--body)':'var(--muted)',fontSize:11,fontWeight:700,letterSpacing:'1px',textTransform:'uppercase',cursor:sIdx>0?'pointer':'default' }}>
-                <ArrowLeft size={13}/> {t.prev}
+                <ArrowLeft size={13}/> {opt.cvLang==='id'?'SEBELUMNYA':'PREVIOUS'}
               </button>
               <button onClick={()=>setSection(SECTIONS[sIdx+1]?.id)} disabled={sIdx===SECTIONS.length-1}
                 className="flex items-center gap-2" style={{ height:40,padding:'0 18px',background:sIdx<SECTIONS.length-1?'var(--m-blue-dark)':'var(--surface-card)',border:'1px solid var(--hairline)',color:sIdx<SECTIONS.length-1?'#fff':'var(--muted)',fontSize:11,fontWeight:700,letterSpacing:'1px',textTransform:'uppercase',cursor:sIdx<SECTIONS.length-1?'pointer':'default' }}>
-                {t.next} <ArrowRight size={13}/>
+                {opt.cvLang==='id'?'SELANJUTNYA':'NEXT'} <ArrowRight size={13}/>
               </button>
             </div>
           </div>
@@ -1320,7 +1320,7 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
           {/* Live Preview */}
           <div style={{ position:'sticky',top:80,height:'fit-content',maxHeight:'calc(100vh - 100px)',overflow:'hidden' }}>
             <div style={{ background:'var(--surface-elevated)',border:'1px solid var(--hairline)',padding:'8px 12px',marginBottom:4,display:'flex',alignItems:'center',justifyContent:'space-between' }}>
-              <span style={{ fontSize:10,fontWeight:700,letterSpacing:'1.5px',color:'var(--muted)',textTransform:'uppercase' }}>{t.livePreview}</span>
+              <span style={{ fontSize:10,fontWeight:700,letterSpacing:'1.5px',color:'var(--muted)',textTransform:'uppercase' }}>{opt.cvLang==='id'?'LIVE PREVIEW':'LIVE PREVIEW'}</span>
               <button onClick={downloadPDF} disabled={downloading} style={{ fontSize:10,fontWeight:700,color:'var(--m-blue-light)',textTransform:'uppercase',background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:5 }}>
                 {downloading?<Loader2 size={11} className="animate-spin"/>:<Download size={11}/>} PDF
               </button>
