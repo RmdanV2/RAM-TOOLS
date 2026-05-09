@@ -1243,7 +1243,7 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
     // ── PREVIEW ──
     if (section === 'preview') return (
       <div>
-        <SH title={opt.cvLang==='id'?'SEBELUMNYA':'PREVIOUS'iewTitle} desc={opt.cvLang==='id'?'SEBELUMNYA':'PREVIOUS'iewDesc} />
+        <SH title={opt.cvLang==='id'?'PREVIEW & UNDUH':'PREVIEW & DOWNLOAD'} desc={opt.cvLang==='id'?'Pastikan semua informasi sudah benar sebelum mengunduh.':'Make sure all information is correct before downloading.'} />
         <ATSScorePanel cv={cv} template={template} t={t} />
         <div className="flex flex-wrap gap-3 mb-6">
           <button onClick={downloadPDF} disabled={downloading} className="btn-m-accent flex items-center gap-2">
