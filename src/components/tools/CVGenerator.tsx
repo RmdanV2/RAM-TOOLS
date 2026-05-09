@@ -721,7 +721,7 @@ function ATSScorePanel({ cv, template, t }: { cv: CVData; template: Template; t:
           <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 2 }}>{t.atsScore}</p>
           <p style={{ fontSize: 30, fontWeight: 700, color, lineHeight: 1 }}>{score}<span style={{ fontSize: 14 }}>%</span></p>
         </div>
-        <p style={{ fontSize: 11, color: 'var(--body)', fontWeight: 300, textAlign: 'right' }}>{score >= 80 ? opt.cvLang==='id'?'✓ Siap dikirim!':'✓ Ready to send!' : score >= 60 ? opt.cvLang==='id'?'⚠ Perlu perbaikan':'⚠ Needs improvement' : opt.cvLang==='id'?'✗ Lengkapi CV':'✗ Complete your CV'}</p>
+        <p style={{ fontSize: 11, color: 'var(--body)', fontWeight: 300, textAlign: 'right' }}>{score >= 80 ? t.atsReady : score >= 60 ? t.atsWarn : t.atsFail}</p>
       </div>
       <div style={{ height: 4, background: 'var(--surface-elevated)', marginBottom: 14 }}>
         <div style={{ height: 4, background: color, width: `${score}%`, transition: 'width 0.5s' }} />
