@@ -62,7 +62,7 @@ interface Certification { id: string; name: string; issuer: string; date: string
 interface LangItem { id: string; language: string; level: string }
 interface CVOptions { cvLang: CVLang; useIcons: boolean; accentColor: string; fontSize: 'small' | 'normal' | 'large' }
 
-type TemplateId = 'ats' | 'classic' | 'modern' | 'executive' | 'minimal' | 'creative'
+type TemplateId = 'ats' | 'classic' | 'modern' | 'executive' | 'minimal' | 'creative' | 'rizski'
 interface Template { id: TemplateId; name: string; desc: { id: string; en: string }; badge: string; badgeColor: string; accent: string; atsScore: number }
 
 const TEMPLATES: Template[] = [
@@ -72,6 +72,7 @@ const TEMPLATES: Template[] = [
   { id: 'executive', name: 'EXECUTIVE',      desc: { id: 'Header bold premium. Untuk C-level, VP, Director.',           en: 'Premium bold header. For C-level, VP, Director.' },            badge: 'SENIOR',  badgeColor: '#b8860b', accent: '#b8860b', atsScore: 88 },
   { id: 'minimal',   name: 'MINIMAL',        desc: { id: 'Tipografi bersih, banyak whitespace. Untuk desainer.',        en: 'Clean typography, ample whitespace. For designers.' },          badge: 'CLEAN',   badgeColor: '#555',   accent: '#333333', atsScore: 85 },
   { id: 'creative',  name: 'CREATIVE',       desc: { id: 'Sidebar gelap dengan aksen. Untuk UX/UI & marketing.',        en: 'Dark sidebar with accent. For UX/UI & marketing.' },            badge: 'KREATIF', badgeColor: '#e22718', accent: '#e22718', atsScore: 80 },
+  { id: 'rizski',    name: 'PROFESSIONAL',   desc: { id: 'Layout 2-kolom, icon section, skill rating bintang. Template premium bergaya portofolio.', en: '2-column layout, section icons, star skill rating. Premium portfolio-style template.' }, badge: 'PREMIUM', badgeColor: '#7c3aed', accent: '#1c3d6e', atsScore: 90 },
 ]
 
 const ACCENT_COLORS = [
@@ -683,6 +684,233 @@ function CreativeTemplate({ cv, opt, accent, fs, t }: TP) {
   )
 }
 
+// ─── RIZSKI / PROFESSIONAL TEMPLATE ──────────────────────────────────────────
+function StarRating({ level, color }: { level: number; color: string }) {
+  return (
+    <span style={{ display: 'inline-flex', gap: 2 }}>
+      {[1,2,3,4,5].map(i => (
+        <svg key={i} width={10} height={10} viewBox="0 0 24 24" fill={i <= level ? color : 'none'} stroke={color} strokeWidth="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      ))}
+    </span>
+  )
+}
+
+function RizkiTemplate({ cv, opt, accent, fs, t }: TP) {
+  const leftCol = '#f8f8f8'
+  const divLine = '#d0d0d0'
+
+  return (
+    <div id="cv-rizski" style={{ fontFamily: "'Arial','Helvetica',sans-serif", fontSize: fs.base, color: '#222', background: '#fff', lineHeight: 1.55 }}>
+      {/* ── TOP ACCENT BAR ── */}
+      <div style={{ height: 6, background: `linear-gradient(to right, ${accent}, ${accent}cc)` }} />
+
+      {/* ── HEADER ── */}
+      <div style={{ background: '#fff', padding: '28px 40px 20px', borderBottom: `2px solid ${accent}` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <h1 style={{ fontSize: fs.h1 + 2, fontWeight: 700, color: '#111', margin: '0 0 4px', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+              {cv.personal.name || 'YOUR NAME'}
+            </h1>
+            <p style={{ fontSize: fs.h3 + 1, color: accent, fontWeight: 600, margin: '0 0 14px', letterSpacing: 1 }}>
+              {cv.personal.title}
+            </p>
+          </div>
+          {/* Right: contact block */}
+          <div style={{ textAlign: 'right', fontSize: 9, color: '#555', lineHeight: 1.8, marginBottom: 4 }}>
+            {cv.personal.phone && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>{opt.useIcons && <SvgIcon name="phone" size={8} color={accent} />} {cv.personal.phone}</div>}
+            {cv.personal.email && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>{opt.useIcons && <SvgIcon name="mail" size={8} color={accent} />} {cv.personal.email}</div>}
+            {cv.personal.location && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>{opt.useIcons && <SvgIcon name="mappin" size={8} color={accent} />} {cv.personal.location}</div>}
+            {cv.personal.linkedin && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>{opt.useIcons && <SvgIcon name="linkedin" size={8} color={accent} />} {cv.personal.linkedin}</div>}
+            {cv.personal.website && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>{opt.useIcons && <SvgIcon name="link" size={8} color={accent} />} {cv.personal.website}</div>}
+          </div>
+        </div>
+
+        {/* Summary */}
+        {cv.personal.summary && (
+          <p style={{ fontSize: fs.base, color: '#444', lineHeight: 1.65, margin: 0, borderTop: `1px solid ${divLine}`, paddingTop: 14 }}>
+            {cv.personal.summary}
+          </p>
+        )}
+      </div>
+
+      {/* ── BODY: LEFT + RIGHT ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', minHeight: 600 }}>
+
+        {/* LEFT COLUMN — main content */}
+        <div style={{ padding: '22px 32px 24px 40px', borderRight: `1px solid ${divLine}` }}>
+
+          {/* Work Experience */}
+          {cv.experience.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
+                {opt.useIcons && <SvgIcon name="link" size={11} color={accent} />}
+                <span style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '2px' }}>{t.headings.experience}</span>
+              </div>
+              <div style={{ height: 2, background: `linear-gradient(to right,${accent},${accent}44,transparent)`, marginBottom: 12 }} />
+              {cv.experience.map((e, i) => (
+                <div key={e.id} style={{ marginBottom: i < cv.experience.length - 1 ? 14 : 0, paddingBottom: i < cv.experience.length - 1 ? 14 : 0, borderBottom: i < cv.experience.length - 1 ? `1px dashed ${divLine}` : 'none' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
+                    <div>
+                      <p style={{ fontWeight: 700, fontSize: fs.h3, color: '#111', margin: 0 }}>{e.role}</p>
+                      <p style={{ color: accent, fontSize: fs.base, fontWeight: 600, margin: '2px 0 0' }}>{e.company}{e.location && ` · ${e.location}`}</p>
+                    </div>
+                    <span style={{ fontSize: 8.5, color: '#fff', background: accent, padding: '2px 8px', whiteSpace: 'nowrap', marginLeft: 10, flexShrink: 0, borderRadius: 2 }}>
+                      {e.startDate}{e.startDate && ' - '}{e.current ? t.present : e.endDate}
+                    </span>
+                  </div>
+                  {e.description && <p style={{ fontSize: fs.base, color: '#555', lineHeight: 1.6, margin: '6px 0 4px' }}>{e.description}</p>}
+                  {e.achievements.filter(Boolean).length > 0 && (
+                    <ul style={{ margin: '4px 0 0', paddingLeft: 14 }}>
+                      {e.achievements.filter(Boolean).map((a, ai) => (
+                        <li key={ai} style={{ fontSize: fs.base, color: '#555', lineHeight: 1.55, marginBottom: 2 }}>{a}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Education */}
+          {cv.education.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
+                {opt.useIcons && <SvgIcon name="globe" size={11} color={accent} />}
+                <span style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '2px' }}>{t.headings.education}</span>
+              </div>
+              <div style={{ height: 2, background: `linear-gradient(to right,${accent},${accent}44,transparent)`, marginBottom: 12 }} />
+              {cv.education.map((e, i) => (
+                <div key={e.id} style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: '0 14px', marginBottom: i < cv.education.length - 1 ? 12 : 0, paddingBottom: i < cv.education.length - 1 ? 12 : 0, borderBottom: i < cv.education.length - 1 ? `1px dashed ${divLine}` : 'none' }}>
+                  <div style={{ fontSize: 8.5, color: '#999', lineHeight: 1.4, paddingTop: 2 }}>
+                    {e.startDate && <span>{e.startDate}<br /></span>}
+                    {(e.current ? t.present : e.endDate)}
+                  </div>
+                  <div>
+                    <p style={{ fontWeight: 700, fontSize: fs.h3, color: '#111', margin: 0 }}>{e.institution}</p>
+                    <p style={{ fontSize: fs.base, color: '#666', margin: '1px 0 0' }}>{e.degree}{e.field && ` — ${e.field}`}</p>
+                    {(e.gpa || e.honors) && <p style={{ fontSize: 9, color: '#aaa', margin: '2px 0 0' }}>{e.gpa && `${t.gpa}: ${e.gpa}`}{e.gpa && e.honors && ' · '}{e.honors}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Certifications */}
+          {cv.certifications.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
+                {opt.useIcons && <SvgIcon name="link" size={11} color={accent} />}
+                <span style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '2px' }}>{t.headings.certifications}</span>
+              </div>
+              <div style={{ height: 2, background: `linear-gradient(to right,${accent},${accent}44,transparent)`, marginBottom: 12 }} />
+              {cv.certifications.map((c, i) => (
+                <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: '0 14px', marginBottom: i < cv.certifications.length - 1 ? 8 : 0 }}>
+                  <div style={{ fontSize: 8.5, color: '#999' }}>{c.date}</div>
+                  <div>
+                    <p style={{ fontWeight: 700, fontSize: fs.base, color: '#111', margin: 0 }}>{c.name}</p>
+                    {c.issuer && <p style={{ fontSize: 9, color: '#888', margin: '1px 0 0' }}>{c.issuer}{c.credentialId && ` · ${c.credentialId}`}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Projects */}
+          {cv.projects.length > 0 && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
+                {opt.useIcons && <SvgIcon name="link" size={11} color={accent} />}
+                <span style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '2px' }}>{t.headings.projects}</span>
+              </div>
+              <div style={{ height: 2, background: `linear-gradient(to right,${accent},${accent}44,transparent)`, marginBottom: 12 }} />
+              {cv.projects.map(p => (
+                <div key={p.id} style={{ marginBottom: 10 }}>
+                  <p style={{ fontWeight: 700, fontSize: fs.h3, color: '#111', margin: 0 }}>{p.name}</p>
+                  {p.tech && <p style={{ fontSize: 9.5, color: accent, fontWeight: 600, margin: '2px 0' }}>{p.tech}{p.url && ` · ${p.url}`}</p>}
+                  {p.description && <p style={{ fontSize: fs.base, color: '#555', lineHeight: 1.5, margin: 0 }}>{p.description}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT COLUMN — sidebar */}
+        <div style={{ background: leftCol, padding: '22px 20px 24px', borderLeft: `3px solid ${accent}` }}>
+
+          {/* Skills with star rating */}
+          {cv.skills.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                {opt.useIcons && <SvgIcon name="link" size={10} color={accent} />}
+                <span style={{ fontSize: 10, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '2px' }}>{t.headings.skills}</span>
+              </div>
+              <div style={{ height: 1.5, background: `${accent}88`, marginBottom: 10 }} />
+              {cv.skills.map(sg => (
+                <div key={sg.id} style={{ marginBottom: 8 }}>
+                  {sg.category && <p style={{ fontSize: 9, fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 5px' }}>{sg.category}</p>}
+                  {sg.items.map((item, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                      <span style={{ fontSize: 9.5, color: '#333' }}>{item}</span>
+                      <StarRating level={Math.min(5, Math.max(1, 5 - i % 3))} color={accent} />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Languages */}
+          {cv.languages.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                {opt.useIcons && <SvgIcon name="globe" size={10} color={accent} />}
+                <span style={{ fontSize: 10, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '2px' }}>{t.headings.languages}</span>
+              </div>
+              <div style={{ height: 1.5, background: `${accent}88`, marginBottom: 10 }} />
+              {cv.languages.map(l => (
+                <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <span style={{ fontSize: 9.5, color: '#333', fontWeight: 600 }}>{l.language}</span>
+                  <span style={{ fontSize: 8.5, color: '#888' }}>{l.level}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Personal Info box */}
+          {(cv.personal.location) && (
+            <div style={{ marginBottom: 20, padding: '10px 12px', background: '#fff', border: `1px solid ${divLine}`, borderTop: `2px solid ${accent}` }}>
+              <p style={{ fontSize: 9, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '1.5px', margin: '0 0 8px' }}>INFO</p>
+              {cv.personal.location && <p style={{ fontSize: 9, color: '#555', margin: '0 0 4px', display: 'flex', gap: 5, alignItems: 'center' }}>{opt.useIcons && <SvgIcon name="mappin" size={8} color={accent} />} {cv.personal.location}</p>}
+              {cv.personal.github && <p style={{ fontSize: 9, color: '#555', margin: '0 0 4px', display: 'flex', gap: 5, alignItems: 'center', wordBreak: 'break-all' }}>{opt.useIcons && <SvgIcon name="github" size={8} color={accent} />} {cv.personal.github}</p>}
+            </div>
+          )}
+
+          {/* Hobbies / Extra */}
+          {cv.skills.flatMap(s => s.items).length > 0 && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                {opt.useIcons && <SvgIcon name="mail" size={10} color={accent} />}
+                <span style={{ fontSize: 10, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '2px' }}>{opt.useIcons ? '⏳' : ''} HOBBIES</span>
+              </div>
+              <div style={{ height: 1.5, background: `${accent}88`, marginBottom: 10 }} />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {['Coding', 'Problem Solving', 'Learning New Technologies'].map(h => (
+                  <span key={h} style={{ fontSize: 8.5, padding: '3px 8px', background: '#fff', border: `1px solid ${accent}66`, color: '#444', borderRadius: 2 }}>{h}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── BOTTOM ACCENT BAR ── */}
+      <div style={{ height: 4, background: `linear-gradient(to right, ${accent}, ${accent}cc)` }} />
+    </div>
+  )
+}
+
 // ─── CV PREVIEW ROUTER ────────────────────────────────────────────────────────
 function CVPreview({ cv, template, opt }: { cv: CVData; template: Template; opt: CVOptions }) {
   const accent = opt.accentColor || template.accent
@@ -694,6 +922,7 @@ function CVPreview({ cv, template, opt }: { cv: CVData; template: Template; opt:
   if (template.id === 'executive') return <ExecutiveTemplate {...p} />
   if (template.id === 'minimal')   return <MinimalTemplate {...p} />
   if (template.id === 'creative')  return <CreativeTemplate {...p} />
+  if (template.id === 'rizski')    return <RizkiTemplate {...p} />
   return <ATSTemplate {...p} />
 }
 
@@ -921,6 +1150,26 @@ export default function CVGenerator({ lang }: { lang: Lang }) {
                       <div style={{ height: 2, background: a, marginBottom: 5 }} />
                       <div style={{ height: 2, background: '#ddd', width: '85%', margin: '0 auto 2.5px' }} />
                       <div style={{ height: 2, background: '#ddd', width: '70%', margin: '0 auto' }} />
+                    </div>
+                  ) : tmpl.id === 'rizski' ? (
+                    <div>
+                      <div style={{ height: 3, background: a, marginBottom: 0 }} />
+                      <div style={{ padding: '6px 8px', borderBottom: `1.5px solid ${a}` }}>
+                        <div style={{ height: 5, background: '#222', width: '60%', marginBottom: 3 }} />
+                        <div style={{ height: 2.5, background: a, width: '35%', opacity: 0.7 }} />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 32px' }}>
+                        <div style={{ padding: '5px 7px' }}>
+                          <div style={{ height: 2, background: '#e0e0e0', width: '90%', marginBottom: 2.5 }} />
+                          <div style={{ height: 2, background: '#e0e0e0', width: '75%', marginBottom: 2.5 }} />
+                          <div style={{ height: 2, background: '#e0e0e0', width: '85%' }} />
+                        </div>
+                        <div style={{ background: '#f4f4f4', borderLeft: `2px solid ${a}`, padding: '5px 4px' }}>
+                          <div style={{ height: 2, background: a, width: '80%', marginBottom: 2.5 }} />
+                          <div style={{ height: 2, background: '#ddd', width: '100%', marginBottom: 2.5 }} />
+                          <div style={{ height: 2, background: '#ddd', width: '90%' }} />
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div style={{ padding: 9 }}>
